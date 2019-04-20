@@ -2,15 +2,15 @@
   "swagger": "2.0",
   "info": {
     "version": "1.0.0",
-    "title": "MyCo",
+    "title": "MyCo API Docs",
     "description": "Documentación oficial de la API REST de MyCo"
   },
   "host": "localhost:8001",
   "basePath": "/",
   "tags": [
     {
-      "name": "Users",
-      "description": "API for users in the system"
+      "name": "User",
+      "description": "Endpoints relacionados con los residentes"
     }
   ],
   "consumes": [
@@ -23,7 +23,7 @@
     "/users": {
       "post": {
         "tags": [
-          "Users"
+          "User"
         ],
         "description": "Create new user in system",
         "parameters": [
@@ -50,14 +50,14 @@
       },
       "get": {
         "tags": [
-          "Users"
+          "User"
         ],
         "summary": "Get all users in system",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/Users"
+              "$ref": "#/definitions/User"
             }
           }
         }
@@ -75,7 +75,7 @@
       ],
       "get": {
         "tags": [
-          "Users"
+          "User"
         ],
         "summary": "Get user with given ID",
         "responses": {
@@ -86,73 +86,223 @@
             }
           }
         }
-      },
-      "delete": {
-        "summary": "Delete user with given ID",
-        "tags": [
-          "Users"
-        ],
-        "responses": {
-          "200": {
-            "description": "User is deleted",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
-          }
-        }
-      },
-      "put": {
-        "summary": "Update user with give ID",
-        "tags": [
-          "Users"
-        ],
-        "parameters": [
-          {
-            "name": "user",
-            "in": "body",
-            "description": "User with new values of properties",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "User is updated",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
-          }
-        }
       }
     }
   },
   "definitions": {
-    "User": {
+    "Residency": {
       "required": [
-        "email",
-        "_id"
+        "id",
+        "name",
+        "yardage"
       ],
       "properties": {
-        "_id": {
-          "type": "string",
-          "uniqueItems": true
-        },
-        "email": {
-          "type": "string",
-          "uniqueItems": true
-        },
-        "lastName": {
+        "id": {
           "type": "string"
         },
-        "firstName": {
+        "name": {
+          "type": "string"
+        },
+        "yardage": {
+          "type": "float"
+        }
+      }
+    },
+    "Service": {
+      "required": [
+        "id",
+        "residency_id",
+        "price",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "residency_id": {
+          "type": "string"
+        },
+        "price": {
+          "type": "float"
+        },
+        "name": {
           "type": "string"
         }
       }
     },
-    "Users": {
-      "type": "array",
-      "$ref": "#/definitions/User"
+    "Property Type": {
+      "required": [
+        "id",
+        "name",
+        "multiplier_factor"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "multiplier_factor": {
+          "type": "float"
+        }
+      }
+    },
+    "Property Service": {
+      "required": [
+        "id",
+        "service_id",
+        "property_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "service_id": {
+          "type": "string"
+        },
+        "property_id": {
+          "type": "string"
+        }
+      }
+    },
+    "Property": {
+      "required": [
+        "id",
+        "residency_id",
+        "property_type_id",
+        "user_id",
+        "yardage",
+        "department_number"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "residency_id": {
+          "type": "string"
+        },
+        "property_type_id": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "yardage": {
+          "type": "float"
+        },
+        "department_number": {
+          "type": "string"
+        }
+      }
+    },
+    "User": {
+      "required": [
+        "id",
+        "name",
+        "lastname",
+        "email",
+        "social_number",
+        "password"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "lastname": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "social_number": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "Bill": {
+      "required": [
+        "id",
+        "property_id",
+        "amount",
+        "description",
+        "creation_date"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "property_id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "float"
+        },
+        "description": {
+          "type": "string"
+        },
+        "creation_date": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Debt": {
+      "required": [
+        "id",
+        "property_id",
+        "amount",
+        "description",
+        "creation_date"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "property_id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "float"
+        },
+        "description": {
+          "type": "string"
+        },
+        "creation_date": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Expense": {
+      "required": [
+        "id",
+        "responsible_user_id",
+        "amount",
+        "concept",
+        "creation_date"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "responsible_user_id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "float"
+        },
+        "concept": {
+          "type": "string"
+        },
+        "creation_date": {
+          "type": "timestamp"
+        }
+      }
     }
   }
 }
