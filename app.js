@@ -5,9 +5,9 @@ const swaggerUI = require('swagger-ui-express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const chalk = require('chalk');
-const path  = require('path');
-const http  = require('http');
+const path = require('path');
 const schema = require('schm');
+
 const app = express();
 
 const swaggerDocument = require('./docs/swagger.json');
@@ -17,7 +17,6 @@ const { connect, promisifyQuery } = require('./src/db');
 const PORT = 5000;
 
 (async () => {
-
   const connection = await connect();
 
   /* ------------------ EXPRESS CONFIG ------------------ */
@@ -45,9 +44,9 @@ const PORT = 5000;
     const { username, password } = credentials;
 
     try {
-      const response = await promisifyQuery(connection, `INSERT INTO user (username, password) VALUES ('${username}', '${password}')`);
+      await promisifyQuery(connection, `INSERT INTO user (username, password) VALUES ('${username}', '${password}')`);
       res.status(200).send('Register Success');
-    } catch(error) {
+    } catch (error) {
       res.status(409).send(`Conflict:\n${error}`);
     }
   });
@@ -56,18 +55,17 @@ const PORT = 5000;
 
   app.listen(process.env.PORT || PORT, () => {
     console.log(
-      chalk.bold.white('> MyCo Backend init')
+      chalk.bold.white('> MyCo Backend init'),
     );
     console.log(
       chalk.white('> Server running on')
       + chalk.bold.blue(` http://localhost:${PORT}`)
-      + chalk.bold.green(' ✔')
+      + chalk.bold.green(' ✔'),
     );
     console.log(
-      chalk.white(`> API Documentation running on`)
+      chalk.white('> API Documentation running on')
       + chalk.bold.blue(` http://localhost:${PORT}/api-docs`)
-      + chalk.bold.green(' ✔')
+      + chalk.bold.green(' ✔'),
     );
   });
-
 })();

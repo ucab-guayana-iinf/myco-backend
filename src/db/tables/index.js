@@ -1,7 +1,7 @@
 const User = require('./User');
 
 const tables = [
-  User
+  User,
 ];
 
 module.exports = tables;

@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "start": "NODE_ENV=production node app.js",
-    "dev": "NODE_ENV=development nodemon app.js"
+    "dev": "NODE_ENV=development nodemon app.js",
+    "lint": "eslint . --max-warnings=0 && echo '✔  Your .js files look good.'"
   },
   "contributors": [
     "Angel Rodríguez <angelmanuelrs@gmail.com>",
@@ -28,6 +29,8 @@
     "chalk": "^2.4.2",
     "dotenv": "^7.0.0",
     "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.2",
     "morgan": "^1.9.1"
   }
 }

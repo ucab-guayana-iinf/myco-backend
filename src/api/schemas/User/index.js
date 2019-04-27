@@ -1,6 +1,6 @@
-const schema = require("schm");
+const schema = require('schm');
 
 module.exports = schema({
   username: { type: String, required: true },
   password: { type: String, required: true },
-});;
+});
