@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "start": "NODE_ENV=production node app.js",
-    "dev": "NODE_ENV=development node app.js"
+    "dev": "NODE_ENV=development nodemon app.js"
   },
   "contributors": [
     "Angel Rodríguez <angelmanuelrs@gmail.com>",
@@ -27,6 +27,7 @@
   "devDependencies": {
     "chalk": "^2.4.2",
     "dotenv": "^7.0.0",
+    "eslint": "^5.16.0",
     "morgan": "^1.9.1"
   }
 }

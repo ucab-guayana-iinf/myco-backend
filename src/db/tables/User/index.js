@@ -1,9 +1,11 @@
 const User = {
   name: 'user',
   fields: `
-    user_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(256),
+    password VARCHAR(256),
+    UNIQUE (username)
   `,
 };
 
 module.exports = User;
-2

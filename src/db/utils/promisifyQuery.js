@@ -5,7 +5,7 @@ function promisifyQuery(connection, query) {
     await connection.query(query, (err, res) => {
       if (err) {
         console.log(chalk.bold.red(`ERROR PROCESSING QUERY: ${query}\nERROR MESSAGE: ${err}`));
-        reject(new Error('Error processing query'));
+        reject(err);
       } else {
         resolve(res);
       }
