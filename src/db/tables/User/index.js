@@ -2,9 +2,13 @@ const User = {
   name: 'user',
   fields: `
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(256),
+    name VARCHAR(256),
+    lastname VARCHAR(256),
+    email VARCHAR(2048),
+    social_number VARCHAR(20),
     password VARCHAR(256),
-    UNIQUE (username)
+    role VARCHAR(50),
+    UNIQUE (email)
   `,
 };
 

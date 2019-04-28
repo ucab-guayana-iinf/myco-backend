@@ -41,11 +41,46 @@ const PORT = 5000;
         res.status(400).send(error);
       });
 
-    const { username, password } = credentials;
+    const {
+      name,
+      lastname,
+      email,
+      social_number: socialNumber,
+      role,
+      password,
+    } = credentials;
 
     try {
-      await promisifyQuery(connection, `INSERT INTO user (username, password) VALUES ('${username}', '${password}')`);
+      const query = `
+      INSERT INTO user
+        (name, lastname, email, social_number, role, password)
+      VALUES
+        ('${name}', '${lastname}', '${email}', '${socialNumber}', '${role}', '${password}')
+      `;
+
+      await promisifyQuery(connection, query);
       res.status(200).send('Register Success');
+    } catch (error) {
+      res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  app.get('/residency/residents', async (req, res) => {
+    try {
+      const response = await promisifyQuery(connection, 'SELECT * FROM user');
+      const residents = response.map(resident => ({
+        name: resident.name,
+        lastname: resident.lastname,
+        email: resident.email,
+        role: resident.role,
+        social_number: resident.social_number,
+      }));
+
+      console.log(residents);
+      res.status(200).send({
+        amount: residents.length,
+        residents,
+      });
     } catch (error) {
       res.status(409).send(`Conflict:\n${error}`);
     }
