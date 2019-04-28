@@ -6,12 +6,11 @@
 | ------------------------- | ------ | ---------- |
 | /register                 | POST   | ✔          |
 | /login                    | POST   | 🗙          |
-| /residency/residents      | POST   | 🗙          |
 | /residency/services       | POST   | 🗙          |
 | /property/services        | POST   | 🗙          |
 | /residency/properties     | POST   | 🗙          |
 | /residency/property-types | POST   | 🗙          |
-| /residency/residents      | GET    | 🗙          |
+| /residency/residents      | GET    | ✔          |
 | /residency/services       | GET    | 🗙          |
 | /property/services        | GET    | 🗙          |
 | /residency/debts          | GET    | 🗙          |

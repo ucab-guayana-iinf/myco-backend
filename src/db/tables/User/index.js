@@ -2,6 +2,7 @@ const User = {
   name: 'user',
   fields: `
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    residency_id INT NOT NULL,
     name VARCHAR(256),
     lastname VARCHAR(256),
     email VARCHAR(2048),
