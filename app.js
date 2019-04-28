@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const swaggerUI = require('swagger-ui-express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
@@ -36,7 +37,7 @@ const PORT = 5000;
   /* --------------------- ENDPOINTS --------------------- */
 
   app.post('/register', async (req, res) => {
-    const credentials = await schema.validate(req.body, apiSchemas.user)
+    const credentials = await schema.validate(req.body, apiSchemas.user.register)
       .catch((error) => {
         res.status(400).send(error);
       });
@@ -59,13 +60,59 @@ const PORT = 5000;
       `;
 
       await promisifyQuery(connection, query);
-      res.status(200).send('Register Success');
+      return res.status(200).send('Register Success');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  app.post('/login', async (req, res) => {
+    const credentials = await schema.validate(req.body, apiSchemas.user.login)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const { email, password } = credentials;
+
+    try {
+      const query = `
+      SELECT * FROM user
+      WHERE
+        email='${email}'
+        && password='${password}'
+      LIMIT 1
+      `;
+
+      const response = await promisifyQuery(connection, query);
+      const user = response[0];
+      const token = jwt.sign({ id: user.id, role: user.role }, 'MYCO-SECRET');
+
+      res.status(200).json({ message: 'Login Success', token });
     } catch (error) {
       res.status(409).send(`Conflict:\n${error}`);
     }
   });
 
   app.get('/residency/residents', async (req, res) => {
+    let user;
+    const { authorization } = req.headers;
+
+    if (!authorization) return res.status(400).send('Missing token');
+
+    try {
+      const regexp = /Bearer\s+(.+)/gi;
+      const token = regexp.exec(authorization)[1];
+      console.log(token);
+      user = jwt.verify(token, apiSecret.secret);
+    } catch (error) {
+      console.error(error);
+      return res.status(401).send('Invalid token');
+    }
+
+    if (user.role !== 'ADMIN') {
+      return res.status(401).send('Unauthorized');
+    }
+
     try {
       const response = await promisifyQuery(connection, 'SELECT * FROM user');
       const residents = response.map(resident => ({
@@ -76,13 +123,9 @@ const PORT = 5000;
         social_number: resident.social_number,
       }));
 
-      console.log(residents);
-      res.status(200).send({
-        amount: residents.length,
-        residents,
-      });
+      return res.status(200).send({ amount: residents.length, residents });
     } catch (error) {
-      res.status(409).send(`Conflict:\n${error}`);
+      return res.status(409).send(`Conflict:\n${error}`);
     }
   });
 
