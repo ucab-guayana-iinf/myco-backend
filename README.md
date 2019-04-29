@@ -5,7 +5,7 @@
 | Endpoint                  | Método | Finalizado |
 | ------------------------- | ------ | ---------- |
 | /register                 | POST   | ✔          |
-| /login                    | POST   | 🗙          |
+| /login                    | POST   | ✔          |
 | /residency/services       | POST   | 🗙          |
 | /property/services        | POST   | 🗙          |
 | /residency/properties     | POST   | 🗙          |
