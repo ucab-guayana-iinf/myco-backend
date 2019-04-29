@@ -8,13 +8,16 @@ const morgan = require('morgan');
 const chalk = require('chalk');
 const path = require('path');
 const schema = require('schm');
+const bcrypt = require('bcrypt');
 
 const app = express();
+const apiSecret = { secret: 'MYCO-SECRET-SSHHHH' };
 
 const swaggerDocument = require('./docs/swagger.json');
 const apiSchemas = require('./src/api/schemas');
 const { connect, promisifyQuery } = require('./src/db');
 
+const saltRounds = 10;
 const PORT = 5000;
 
 (async () => {
@@ -51,12 +54,14 @@ const PORT = 5000;
       password,
     } = credentials;
 
+    const hash = bcrypt.hashSync(password, saltRounds);
+
     try {
       const query = `
       INSERT INTO user
         (name, lastname, email, social_number, role, password)
       VALUES
-        ('${name}', '${lastname}', '${email}', '${socialNumber}', '${role}', '${password}')
+        ('${name}', '${lastname}', '${email}', '${socialNumber}', '${role}', '${hash}')
       `;
 
       await promisifyQuery(connection, query);
@@ -75,19 +80,24 @@ const PORT = 5000;
     const { email, password } = credentials;
 
     try {
-      const query = `
+      const query1 = `
       SELECT * FROM user
       WHERE
         email='${email}'
-        && password='${password}'
       LIMIT 1
       `;
 
-      const response = await promisifyQuery(connection, query);
+      const response = await promisifyQuery(connection, query1);
       const user = response[0];
-      const token = jwt.sign({ id: user.id, role: user.role }, 'MYCO-SECRET');
 
-      res.status(200).json({ message: 'Login Success', token });
+      const match = bcrypt.compare(password, user.password);
+
+      if (match) {
+        const token = jwt.sign({ id: user.id, role: user.role }, apiSecret.secret);
+        res.status(200).json({ message: 'Login Success', token });
+      } else {
+        res.status(400).send('Invalid credentials');
+      }
     } catch (error) {
       res.status(409).send(`Conflict:\n${error}`);
     }
@@ -102,20 +112,19 @@ const PORT = 5000;
     try {
       const regexp = /Bearer\s+(.+)/gi;
       const token = regexp.exec(authorization)[1];
-      console.log(token);
       user = jwt.verify(token, apiSecret.secret);
     } catch (error) {
-      console.error(error);
       return res.status(401).send('Invalid token');
     }
 
     if (user.role !== 'ADMIN') {
-      return res.status(401).send('Unauthorized');
+      return res.status(403).send('Forbidden');
     }
 
     try {
       const response = await promisifyQuery(connection, 'SELECT * FROM user');
       const residents = response.map(resident => ({
+        id: resident.id,
         name: resident.name,
         lastname: resident.lastname,
         email: resident.email,
