@@ -199,6 +199,10 @@ const PORT = 5000;
 
   /* ---------------------------------------------------- */
 
+  app.get('/', (req, res) => {
+    res.send('Watcha lookin\' at?');
+  });
+
   app.listen(process.env.PORT || PORT, () => {
     console.log(
       chalk.bold.white('> MyCo Backend init'),
