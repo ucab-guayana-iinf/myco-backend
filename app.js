@@ -14,6 +14,7 @@ const app = express();
 const apiSecret = { secret: 'MYCO-SECRET-SSHHHH' };
 
 const swaggerDocument = require('./docs/swagger.json');
+const swaggerConfig = require('./docs/config');
 const apiSchemas = require('./src/api/schemas');
 const { connect, promisifyQuery } = require('./src/db');
 const utils = require('./src/utils');
@@ -36,7 +37,7 @@ const PORT = 5000;
   app.use(morgan('tiny'));
   app.use(bodyParser.json());
   app.use(express.static(path.join(__dirname, 'public')));
-  app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+  app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument, swaggerConfig));
 
   /* --------------------- ENDPOINTS --------------------- */
 
