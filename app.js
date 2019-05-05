@@ -17,13 +17,16 @@ const swaggerDocument = require('./docs/swagger.json');
 const swaggerConfig = require('./docs/config');
 const apiSchemas = require('./src/api/schemas');
 const { connect, promisifyQuery } = require('./src/db');
+const handleDisconnect = require('./src/db/utils/handleDisconnect');
 const utils = require('./src/utils');
 
 const saltRounds = 10;
 const PORT = 5000;
+let connection;
 
 (async () => {
-  const connection = await connect();
+  connection = await connect();
+  handleDisconnect(connection);
 
   /* ------------------ EXPRESS CONFIG ------------------ */
 
