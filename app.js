@@ -16,6 +16,7 @@ const apiSecret = { secret: 'MYCO-SECRET-SSHHHH' };
 const swaggerDocument = require('./docs/swagger.json');
 const apiSchemas = require('./src/api/schemas');
 const { connect, promisifyQuery } = require('./src/db');
+const utils = require('./src/utils');
 
 const saltRounds = 10;
 const PORT = 5000;
@@ -49,7 +50,7 @@ const PORT = 5000;
       name,
       lastname,
       email,
-      social_number: socialNumber,
+      social_number,
       role,
       password,
     } = credentials;
@@ -61,7 +62,7 @@ const PORT = 5000;
       INSERT INTO user
         (name, lastname, email, social_number, role, password)
       VALUES
-        ('${name}', '${lastname}', '${email}', '${socialNumber}', '${role}', '${hash}')
+        ('${name}', '${lastname}', '${email}', '${social_number}', '${role}', '${hash}')
       `;
 
       await promisifyQuery(connection, query);
@@ -103,19 +104,76 @@ const PORT = 5000;
     }
   });
 
-  app.get('/residency/residents', async (req, res) => {
-    let user;
-    const { authorization } = req.headers;
 
-    if (!authorization) return res.status(400).send('Missing token');
+  /* --------------------- BILLS --------------------- */
+
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* --------------------- DEBTS --------------------- */
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* --------------------- PROPERTY --------------------- */
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* ------------------- PROPERTY-TYPE ------------------- */
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* --------------------- SERVICE --------------------- */
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* --------------------- RESIDENCY --------------------- */
+
+  app.post('/residency/create', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const residency = await schema.validate(req.body, apiSchemas.residency)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const { admin_id, name } = residency;
 
     try {
-      const regexp = /Bearer\s+(.+)/gi;
-      const token = regexp.exec(authorization)[1];
-      user = jwt.verify(token, apiSecret.secret);
+      const query1 = `
+      INSERT INTO residency
+        (admin_id, name)
+      VALUES
+        ('${admin_id}', '${name}')
+      `;
+
+      await promisifyQuery(connection, query1);
+      return res.status(200).send('Successfully created residency');
     } catch (error) {
-      return res.status(401).send('Invalid token');
+      return res.status(409).send(`Conflict:\n${error}`);
     }
+  });
+
+  app.get('/residency/residents', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
 
     if (user.role !== 'ADMIN') {
       return res.status(403).send('Forbidden');

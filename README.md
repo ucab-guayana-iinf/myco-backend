@@ -6,6 +6,7 @@
 | ------------------------- | ------ | ---------- |
 | /register                 | POST   | ✔          |
 | /login                    | POST   | ✔          |
+| /residency/create         | POST   | 🗙          |
 | /residency/services       | POST   | 🗙          |
 | /property/services        | POST   | 🗙          |
 | /residency/properties     | POST   | 🗙          |
