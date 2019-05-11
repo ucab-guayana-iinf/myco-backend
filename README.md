@@ -18,6 +18,12 @@ DEV_DB_USER=root
 DEV_DB_PASSWORD=1234567890
 DEV_DATABASE_NAME=myco
 
+## NOTAS
+
+- Las cantidades relacionadas a precios/metrajes/montos están "limitadas" por la definición de utilizando FLOAT(14, 2)
+(14 digitos, precisión de 2 puntos)
+- El concepto de los gastos (Expense) están limitados a 400 caracteres
+
 ## Estatus de desarrollo endpoints criticos
 
 | Endpoint                  | Método | Finalizado |
