@@ -114,7 +114,7 @@ let connection;
   // GET
   app.get('/residency/bills', async (req, res) => {
     try {
-      const response = await promisifyQuery(connection, `SELECT * FROM bill WHERE id = ` + req.body.id);
+      const response = await promisifyQuery(connection, `SELECT * FROM bill WHERE property_id = ` + req.body.property_id);
       const bills = response.map(bills => ({
         id: bills.id,
         property_id: bills.property_id,
