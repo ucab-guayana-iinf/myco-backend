@@ -112,10 +112,81 @@ let connection;
   /* --------------------- BILLS --------------------- */
 
   // GET
+  app.get('/residency/bills', async (req, res) => {
+    try {
+      const response = await promisifyQuery(connection, `SELECT * FROM bill WHERE id = ` + req.body.id);
+      const bills = response.map(bills => ({
+        id: bills.id,
+        property_id: bills.property_id,
+        monthly_paymment: bills.monthly_paymment,
+        debt: bills.debt,
+        special_fee: bills.special_fee,
+        other: bills.other,
+        creation_date: bills.creation_date,
+        last_update: bills.last_update,
+      }));
 
-  // POST
+      return res.status(200).send({bills});
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  //POST
+  app.post('/residency/bills', async (req, res) => {
+    const bill = await schema.validate(req.body, apiSchemas.residency.bill)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const {
+      property_id,
+      monthly_paymment,
+      debt,
+      special_fee,
+      other,
+      date = new Date(),
+    } = bill;
+
+    try {
+      const query = `
+      INSERT INTO bill
+        (property_id, monthly_paymment, debt, special_fee, other, creation_date, last_update)
+      VALUES
+        ('${property_id}', '${monthly_paymment}', '${debt}', '${special_fee}', '${other}', '${date}', '${date}')
+      `;
+
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Bill saved succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
   // PUT
+  app.put('/residency/bills', async (req, res) => {
+    const bill = await schema.validate(req.body, apiSchemas.residency.bill)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const {
+      property_id,
+      monthly_paymment,
+      debt,
+      special_fee,
+      other,
+      date = new Date(),
+    } = bill;
+
+    try {
+      var query = `UPDATE bill SET property_id = '${property_id}', monthly_paymment = '${monthly_paymment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Bill updated successfuly')
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
   /* --------------------- DEBTS --------------------- */
   // GET
