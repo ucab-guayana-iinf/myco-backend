@@ -138,6 +138,23 @@ const PORT = 5000;
     }
   });
 
+  //todavia no lo pruebo (vicente)
+
+  app.get('residency/service', async (req, res) => {
+
+    try{
+      const response = await promisifyQuery(connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
+      const services = response.map(service => ({
+        name: service.name,
+        residency_id: service.residency_id,
+      }))
+
+      return res.status(200).send(services);
+    }catch(error){
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  })
+
   /* ---------------------------------------------------- */
 
   app.listen(process.env.PORT || PORT, () => {
