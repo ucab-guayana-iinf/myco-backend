@@ -3,11 +3,14 @@ const tables = require('../tables');
 const promisifyQuery = require('./promisifyQuery');
 
 async function setupDB(connection) {
-  // create the database if it doesn't exists
-  await promisifyQuery(connection, 'CREATE DATABASE IF NOT EXISTS myco');
+  const DB_NAME = process.env.NODE_ENV === 'production'
+    ? process.env.CLEARDB_DATABASE_NAME
+    : process.env.DEV_DATABASE_NAME;
+
+  await promisifyQuery(connection, `CREATE DATABASE IF NOT EXISTS ${DB_NAME}`);
 
   // use the database
-  await promisifyQuery(connection, 'USE myco');
+  await promisifyQuery(connection, `USE ${DB_NAME}`);
 
   // create the tables if they don't exist
   tables.forEach(async (table, i) => {

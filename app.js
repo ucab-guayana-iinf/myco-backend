@@ -14,14 +14,19 @@ const app = express();
 const apiSecret = { secret: 'MYCO-SECRET-SSHHHH' };
 
 const swaggerDocument = require('./docs/swagger.json');
+const swaggerConfig = require('./docs/config');
 const apiSchemas = require('./src/api/schemas');
 const { connect, promisifyQuery } = require('./src/db');
+const handleDisconnect = require('./src/db/utils/handleDisconnect');
+const utils = require('./src/utils');
 
 const saltRounds = 10;
 const PORT = 5000;
+let connection;
 
 (async () => {
-  const connection = await connect();
+  connection = await connect();
+  handleDisconnect(connection);
 
   /* ------------------ EXPRESS CONFIG ------------------ */
 
@@ -35,7 +40,7 @@ const PORT = 5000;
   app.use(morgan('tiny'));
   app.use(bodyParser.json());
   app.use(express.static(path.join(__dirname, 'public')));
-  app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+  app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument, swaggerConfig));
 
   /* --------------------- ENDPOINTS --------------------- */
 
@@ -49,7 +54,7 @@ const PORT = 5000;
       name,
       lastname,
       email,
-      social_number: socialNumber,
+      social_number,
       role,
       password,
     } = credentials;
@@ -61,7 +66,7 @@ const PORT = 5000;
       INSERT INTO user
         (name, lastname, email, social_number, role, password)
       VALUES
-        ('${name}', '${lastname}', '${email}', '${socialNumber}', '${role}', '${hash}')
+        ('${name}', '${lastname}', '${email}', '${social_number}', '${role}', '${hash}')
       `;
 
       await promisifyQuery(connection, query);
@@ -103,19 +108,147 @@ const PORT = 5000;
     }
   });
 
-  app.get('/residency/residents', async (req, res) => {
-    let user;
-    const { authorization } = req.headers;
 
-    if (!authorization) return res.status(400).send('Missing token');
+  /* --------------------- BILLS --------------------- */
+
+  // GET
+  app.get('/residency/bills', async (req, res) => {
+    try {
+      const response = await promisifyQuery(connection, `SELECT * FROM bill WHERE property_id = ` + req.body.property_id);
+      const bills = response.map(bills => ({
+        id: bills.id,
+        property_id: bills.property_id,
+        monthly_paymment: bills.monthly_paymment,
+        debt: bills.debt,
+        special_fee: bills.special_fee,
+        other: bills.other,
+        creation_date: bills.creation_date,
+        last_update: bills.last_update,
+      }));
+
+      return res.status(200).send({bills});
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  //POST
+  app.post('/residency/bills', async (req, res) => {
+    const bill = await schema.validate(req.body, apiSchemas.residency.bill)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const {
+      property_id,
+      monthly_paymment,
+      debt,
+      special_fee,
+      other,
+      date = new Date(),
+    } = bill;
 
     try {
-      const regexp = /Bearer\s+(.+)/gi;
-      const token = regexp.exec(authorization)[1];
-      user = jwt.verify(token, apiSecret.secret);
+      const query = `
+      INSERT INTO bill
+        (property_id, monthly_paymment, debt, special_fee, other, creation_date, last_update)
+      VALUES
+        ('${property_id}', '${monthly_paymment}', '${debt}', '${special_fee}', '${other}', '${date}', '${date}')
+      `;
+
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Bill saved succesfully');
     } catch (error) {
-      return res.status(401).send('Invalid token');
+      return res.status(409).send(`Conflict:\n${error}`);
     }
+  });
+
+  // PUT
+  app.put('/residency/bills', async (req, res) => {
+    const bill = await schema.validate(req.body, apiSchemas.residency.bill)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const {
+      property_id,
+      monthly_paymment,
+      debt,
+      special_fee,
+      other,
+      date = new Date(),
+    } = bill;
+
+    try {
+      var query = `UPDATE bill SET property_id = '${property_id}', monthly_paymment = '${monthly_paymment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Bill updated successfuly')
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  /* --------------------- DEBTS --------------------- */
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* --------------------- PROPERTY --------------------- */
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* ------------------- PROPERTY-TYPE ------------------- */
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* --------------------- SERVICE --------------------- */
+  // GET
+
+  // POST
+
+  // PUT
+
+  /* --------------------- RESIDENCY --------------------- */
+
+  app.post('/residency/create', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const residency = await schema.validate(req.body, apiSchemas.residency)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const { admin_id, name } = residency;
+
+    try {
+      const query1 = `
+      INSERT INTO residency
+        (admin_id, name)
+      VALUES
+        ('${admin_id}', '${name}')
+      `;
+
+      await promisifyQuery(connection, query1);
+      return res.status(200).send('Successfully created residency');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  app.get('/residency/residents', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
 
     if (user.role !== 'ADMIN') {
       return res.status(403).send('Forbidden');
@@ -138,24 +271,11 @@ const PORT = 5000;
     }
   });
 
-  //todavia no lo pruebo (vicente)
-
-  app.get('residency/service', async (req, res) => {
-
-    try{
-      const response = await promisifyQuery(connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
-      const services = response.map(service => ({
-        name: service.name,
-        residency_id: service.residency_id,
-      }))
-
-      return res.status(200).send(services);
-    }catch(error){
-      return res.status(409).send(`Conflict:\n${error}`);
-    }
-  })
-
   /* ---------------------------------------------------- */
+
+  app.get('/', (req, res) => {
+    res.send('Watcha lookin\' at?');
+  });
 
   app.listen(process.env.PORT || PORT, () => {
     console.log(

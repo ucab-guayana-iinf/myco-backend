@@ -7,6 +7,7 @@
   "scripts": {
     "start": "NODE_ENV=production node app.js",
     "dev": "NODE_ENV=development nodemon app.js",
+    "dev_w": "SET NODE_ENV=development & nodemon app.js",
     "lint": "eslint . --max-warnings=0 && echo '✔  Your .js files look good.'"
   },
   "contributors": [
@@ -23,14 +24,14 @@
     "mysql": "^2.16.0",
     "nodemon": "^1.13.3",
     "schm": "^0.4.1",
-    "swagger-ui-express": "^4.0.2"
+    "swagger-ui-express": "^4.0.2",
+    "dotenv": "^7.0.0",
+    "morgan": "^1.9.1"
   },
   "devDependencies": {
     "chalk": "^2.4.2",
-    "dotenv": "^7.0.0",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.17.2",
-    "morgan": "^1.9.1"
+    "eslint-plugin-import": "^2.17.2"
   }
 }
