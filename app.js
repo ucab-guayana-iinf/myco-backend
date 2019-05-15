@@ -271,6 +271,58 @@ let connection;
     }
   });
 
+  /* ------------------- RESIDENCY SERVICES --------------------- */
+
+    app.post('/residency/service', async (req, res) => {
+      const user = utils.verifyToken(res, req.headers);
+
+      if (user.role !== 'ADMIN') {
+        return res.status(403).send('Forbidden');
+      }
+
+      const service = await schema.validate(req.body, apiSchemas.residency.service)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+      const {
+        id,
+        residency_id,
+        price,
+        name,
+      } = service;
+
+      try{
+        const query = `INSERT INTO service (id, property_id, price, name) VALUES
+        ('${id}', '${residency_id}', '${price}', '${name}')`;
+
+        await promisifyQuery(connection, query);
+        return res.status(200).send('Service saved succesfully');
+      } catch (error) {
+        return res.status(409).send(`Conflict:\n${error}`);
+    }
+    });
+
+    app.get('/residency/service', async (req, res) => {
+      const user = utils.verifyToken(res, req.headers);
+
+      if (user.role !== 'ADMIN') {
+        return res.status(403).send('Forbidden');
+      }
+    
+      try{
+        const response = await promisifyQuery(connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
+        const services = response.map(service => ({
+          name: service.name,
+          residency_id: service.residency_id,
+        }))
+
+        return res.status(200).send(services);
+      }catch(error){
+        return res.status(409).send(`Conflict:\n${error}`);
+      }
+  });
+
   /* ---------------------------------------------------- */
 
   app.get('/', (req, res) => {
