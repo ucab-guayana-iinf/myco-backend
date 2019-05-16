@@ -273,6 +273,8 @@ let connection;
 
   /* ------------------- RESIDENCY SERVICES --------------------- */
 
+  //POST
+
     app.post('/residency/service', async (req, res) => {
       const user = utils.verifyToken(res, req.headers);
 
@@ -303,6 +305,8 @@ let connection;
     }
     });
 
+  //GET
+
     app.get('/residency/service', async (req, res) => {
       const user = utils.verifyToken(res, req.headers);
 
@@ -321,7 +325,30 @@ let connection;
       }catch(error){
         return res.status(409).send(`Conflict:\n${error}`);
       }
-  });
+    });
+
+  //PUT
+  
+    app.put('/residency/service', async (req, res) => {
+      const service = await schema.validate(req.body, apiSchemas.residency.service)
+        .catch((error) => {
+          res.status(400).send(error);
+        });
+
+      const {
+        residency_id,
+        price,
+        name,
+      } = service;
+
+      try {
+        var query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}' WHERE id = '${req.body.id}'`;
+        await promisifyQuery(connection, query);
+        return res.status(200).send('Service updated successfuly')
+      } catch (error) {
+        return res.status(409).send(`Conflict:\n${error}`);
+      }
+    });
 
   /* ---------------------------------------------------- */
 
