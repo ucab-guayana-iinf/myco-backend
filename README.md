@@ -31,7 +31,7 @@ DEV_DATABASE_NAME=myco
 | /register                 | POST   | ✔          |
 | /login                    | POST   | ✔          |
 | /residency/create         | POST   | ✔          |
-| /residency/services       | POST   | 🗙          |
+| /residency/services       | POST   | ✔           |
 | /property/services        | POST   | 🗙          |
 | /residency/properties     | POST   | 🗙          |
 | /residency/property-types | POST   | 🗙          |
@@ -40,7 +40,7 @@ DEV_DATABASE_NAME=myco
 | /property/services        | GET    | 🗙          |
 | /residency/debts          | GET    | 🗙          |
 | /resident/debts           | GET    | 🗙          |
-| /residency/bills          | GET    | 🗙          |
+| /residency/bills          | GET    | ✔           |
 | /resident/bills           | GET    | 🗙          |
 | /residency/properties     | GET    | 🗙          |
 | /resident/properties      | GET    | 🗙          |
