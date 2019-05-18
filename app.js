@@ -48,7 +48,6 @@ let connection;
     const credentials = await schema.validate(req.body, apiSchemas.user.register)
       .catch(error => res.status(400).send(error));
 
-
     const {
       name,
       lastname,
@@ -104,7 +103,6 @@ let connection;
       res.status(409).send(`Conflict:\n${error}`);
     }
   });
-
 
   /* --------------------- BILLS --------------------- */
 
@@ -336,7 +334,6 @@ let connection;
   /* ------------------- RESIDENCY SERVICES --------------------- */
 
   // POST
-
   app.post('/residency/service', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
 
@@ -367,7 +364,6 @@ let connection;
   });
 
   // GET
-
   app.get('/residency/service', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
 
@@ -389,7 +385,6 @@ let connection;
   });
 
   // PUT
-
   app.put('/residency/service', async (req, res) => {
     const service = await schema.validate(req.body, apiSchemas.residency.service)
       .catch(error => res.status(400).send(error));
