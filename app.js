@@ -46,9 +46,8 @@ let connection;
 
   app.post('/register', async (req, res) => {
     const credentials = await schema.validate(req.body, apiSchemas.user.register)
-      .catch((error) => {
-        res.status(400).send(error);
-      });
+      .catch(error => res.status(400).send(error));
+
 
     const {
       name,
@@ -63,10 +62,10 @@ let connection;
 
     try {
       const query = `
-      INSERT INTO user
-        (name, lastname, email, social_number, role, password)
-      VALUES
-        ('${name}', '${lastname}', '${email}', '${social_number}', '${role}', '${hash}')
+        INSERT INTO user
+          (name, lastname, email, social_number, role, password)
+        VALUES
+          ('${name}', '${lastname}', '${email}', '${social_number}', '${role}', '${hash}')
       `;
 
       await promisifyQuery(connection, query);
@@ -78,18 +77,16 @@ let connection;
 
   app.post('/login', async (req, res) => {
     const credentials = await schema.validate(req.body, apiSchemas.user.login)
-      .catch((error) => {
-        res.status(400).send(error);
-      });
+      .catch(error => res.status(400).send(error));
 
     const { email, password } = credentials;
 
     try {
       const query1 = `
-      SELECT * FROM user
-      WHERE
-        email='${email}'
-      LIMIT 1
+        SELECT * FROM user
+        WHERE
+          email='${email}'
+        LIMIT 1
       `;
 
       const response = await promisifyQuery(connection, query1);
@@ -114,30 +111,28 @@ let connection;
   // GET
   app.get('/residency/bills', async (req, res) => {
     try {
-      const response = await promisifyQuery(connection, `SELECT * FROM bill WHERE property_id = ` + req.body.property_id);
-      const bills = response.map(bills => ({
-        id: bills.id,
-        property_id: bills.property_id,
-        monthly_paymment: bills.monthly_paymment,
-        debt: bills.debt,
-        special_fee: bills.special_fee,
-        other: bills.other,
-        creation_date: bills.creation_date,
-        last_update: bills.last_update,
+      const response = await promisifyQuery(connection, `SELECT * FROM bill WHERE property_id = ${req.body.property_id}`);
+      const bills = response.map(_bills => ({
+        id: _bills.id,
+        property_id: _bills.property_id,
+        monthly_paymment: _bills.monthly_paymment,
+        debt: _bills.debt,
+        special_fee: _bills.special_fee,
+        other: _bills.other,
+        creation_date: _bills.creation_date,
+        last_update: _bills.last_update,
       }));
 
-      return res.status(200).send({bills});
+      return res.status(200).send({ bills });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
 
-  //POST
+  // POST
   app.post('/residency/bills', async (req, res) => {
     const bill = await schema.validate(req.body, apiSchemas.residency.bill)
-      .catch((error) => {
-        res.status(400).send(error);
-      });
+      .catch(error => res.status(400).send(error));
 
     const {
       property_id,
@@ -166,9 +161,8 @@ let connection;
   // PUT
   app.put('/residency/bills', async (req, res) => {
     const bill = await schema.validate(req.body, apiSchemas.residency.bill)
-      .catch((error) => {
-        res.status(400).send(error);
-      });
+      .catch(error => res.status(400).send(error));
+
 
     const {
       property_id,
@@ -180,9 +174,9 @@ let connection;
     } = bill;
 
     try {
-      var query = `UPDATE bill SET property_id = '${property_id}', monthly_paymment = '${monthly_paymment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
+      const query = `UPDATE bill SET property_id = '${property_id}', monthly_paymment = '${monthly_paymment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(connection, query);
-      return res.status(200).send('Bill updated successfuly')
+      return res.status(200).send('Bill updated successfuly');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -217,78 +211,77 @@ let connection;
   // PUT
 
   /* --------------------- RESIDENCY --------------------- */
+
+  // POST
   app.post('/residency/create', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
- 
-     if (user.role !== 'ADMIN') {
-       return res.status(403).send('Forbidden');
-     }
- 
-     const residency = await schema.validate(req.body, apiSchemas.residency.data)
-       .catch((error) => {
-         res.status(400).send(error);
-       });
- 
-     const { admin_id, name, yardage } = residency;
- 
-     try {
-       var query = `
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const residency = await schema.validate(req.body, apiSchemas.residency.data)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const { admin_id, name, yardage } = residency;
+
+    try {
+      const query = `
        INSERT INTO residency
          (admin_id, name, yardage)
        VALUES
          ('${admin_id}', '${name}', '${yardage}')
        `;
- 
-       await promisifyQuery(connection, query);
-       return res.status(200).send('Successfully created residency');
-     } catch (error) {
-       return res.status(409).send(`Conflict:\n${error}`);
-     }
-   });
- 
-   app.get('/residency/:id', async (req, res) => {
-     try {
-       const response = await promisifyQuery(connection, `SELECT * FROM residency WHERE id = ` + req.params.id);
-       const residency = response.map(residency => ({
-         id: residency.id,
-         admin_id: residency.admin_id,
-         name: residency.name,
-         yardage: residency.yardage,
-       }));
- 
-       return res.status(200).send({residency});
-     } catch (error) {
-       return res.status(409).send(`Conflict:\n${error}`);
-     }
-   });
- 
-   /*---------------------To finish---------------------*/
-   app.put('/residency/update'), async (req, res)=>{
-     const user = utils.verifyToken(res, req.headers);
- 
-     if (user.role !== 'ADMIN') {
-       return res.status(403).send('Forbidden');
-     }
- 
-     const residency = await schema.validate(req.body, apiSchemas.residency.data)
-       .catch((error) => {
-         res.status(400).send(error);
-       });
- 
-     const {
-       admin_id,
-       name,
-       yardage,
-     } = residency;
- 
-     try {
-       var query = `UPDATE residency SET admin_id = '${admin_id}', name = '${name}', yardage = '${yardage}' WHERE id = '${req.body.id}'`;
-       await promisifyQuery(connection, query);
-       return res.status(200).send('Residency updated successfuly')
-     } catch (error) {
-       return res.status(409).send(`Conflict:\n${error}`);
-     }
-   };
+
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Successfully created residency');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // GET
+  app.get('/residency/:id', async (req, res) => {
+    try {
+      const response = await promisifyQuery(connection, `SELECT * FROM residency WHERE id = ${req.params.id}`);
+      const residency = response.map(_residency => ({
+        id: _residency.id,
+        admin_id: _residency.admin_id,
+        name: _residency.name,
+        yardage: _residency.yardage,
+      }));
+
+      return res.status(200).send({ residency });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  /* ---------------------To finish--------------------- */
+
+  app.put('/residency/update', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const residency = await schema.validate(req.body, apiSchemas.residency.data)
+      .catch(error => res.status(400).send(error));
+
+    const { admin_id, name, yardage } = residency;
+
+    try {
+      const query = `UPDATE residency SET admin_id = '${admin_id}', name = '${name}', yardage = '${yardage}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Residency updated successfuly');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
   app.get('/residency/residents', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
 
@@ -297,18 +290,16 @@ let connection;
     }
 
     const residency = await schema.validate(req.body, apiSchemas.residency)
-      .catch((error) => {
-        res.status(400).send(error);
-      });
+      .catch(error => res.status(400).send(error));
 
     const { admin_id, name } = residency;
 
     try {
       const query1 = `
-      INSERT INTO residency
-        (admin_id, name)
-      VALUES
-        ('${admin_id}', '${name}')
+        INSERT INTO residency
+          (admin_id, name)
+        VALUES
+          ('${admin_id}', '${name}')
       `;
 
       await promisifyQuery(connection, query1);
@@ -344,82 +335,80 @@ let connection;
 
   /* ------------------- RESIDENCY SERVICES --------------------- */
 
-  //POST
+  // POST
 
-    app.post('/residency/service', async (req, res) => {
-      const user = utils.verifyToken(res, req.headers);
+  app.post('/residency/service', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
 
-      if (user.role !== 'ADMIN') {
-        return res.status(403).send('Forbidden');
-      }
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
 
-      const service = await schema.validate(req.body, apiSchemas.residency.service)
-      .catch((error) => {
-        res.status(400).send(error);
-      });
+    const service = await schema.validate(req.body, apiSchemas.residency.service)
+      .catch(error => res.status(400).send(error));
 
-      const {
-        id,
-        residency_id,
-        price,
-        name,
-      } = service;
 
-      try{
-        const query = `INSERT INTO service (id, property_id, price, name) VALUES
+    const {
+      id,
+      residency_id,
+      price,
+      name,
+    } = service;
+
+    try {
+      const query = `INSERT INTO service (id, property_id, price, name) VALUES
         ('${id}', '${residency_id}', '${price}', '${name}')`;
 
-        await promisifyQuery(connection, query);
-        return res.status(200).send('Service saved succesfully');
-      } catch (error) {
-        return res.status(409).send(`Conflict:\n${error}`);
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Service saved succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
     }
-    });
+  });
 
-  //GET
+  // GET
 
-    app.get('/residency/service', async (req, res) => {
-      const user = utils.verifyToken(res, req.headers);
+  app.get('/residency/service', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
 
-      if (user.role !== 'ADMIN') {
-        return res.status(403).send('Forbidden');
-      }
-    
-      try{
-        const response = await promisifyQuery(connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
-        const services = response.map(service => ({
-          name: service.name,
-          residency_id: service.residency_id,
-        }))
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
 
-        return res.status(200).send(services);
-      }catch(error){
-        return res.status(409).send(`Conflict:\n${error}`);
-      }
-    });
+    try {
+      const response = await promisifyQuery(connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
+      const services = response.map(service => ({
+        name: service.name,
+        residency_id: service.residency_id,
+      }));
 
-  //PUT
-  
-    app.put('/residency/service', async (req, res) => {
-      const service = await schema.validate(req.body, apiSchemas.residency.service)
-        .catch((error) => {
-          res.status(400).send(error);
-        });
+      return res.status(200).send(services);
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
-      const {
-        residency_id,
-        price,
-        name,
-      } = service;
+  // PUT
 
-      try {
-        var query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}' WHERE id = '${req.body.id}'`;
-        await promisifyQuery(connection, query);
-        return res.status(200).send('Service updated successfuly')
-      } catch (error) {
-        return res.status(409).send(`Conflict:\n${error}`);
-      }
-    });
+  app.put('/residency/service', async (req, res) => {
+    const service = await schema.validate(req.body, apiSchemas.residency.service)
+      .catch(error => res.status(400).send(error));
+
+
+    const {
+      residency_id,
+      price,
+      name,
+    } = service;
+
+    try {
+      const query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Service updated successfuly');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
   /* ---------------------------------------------------- */
 
