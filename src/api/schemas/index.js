@@ -1,7 +1,7 @@
 const register = require('./User/register');
 const login = require('./User/login');
 const bill = require('./Residency/bill');
-const data = require('./Residency/data')
+const data = require('./Residency/data');
 
 module.exports = {
   user: {
@@ -10,6 +10,6 @@ module.exports = {
   },
   residency: {
     bill,
-    data
+    data,
   },
 };
