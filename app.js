@@ -161,7 +161,6 @@ let connection;
     const bill = await schema.validate(req.body, apiSchemas.residency.bill)
       .catch(error => res.status(400).send(error));
 
-
     const {
       property_id,
       monthly_paymment,
@@ -200,6 +199,10 @@ let connection;
 
   // GET
   app.get('/residency/property-types', async (req, res) => {
+    const { residency_id } = req.body;
+
+    if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
+
     try {
       const response = await promisifyQuery(connection, `SELECT * FROM property_type WHERE residency_id=${req.body.residency_id}`);
       const property_types = response.map(property_type => ({
@@ -214,15 +217,52 @@ let connection;
   });
 
   // POST
-  app.post('/residency/property-types', async (req, res) => { // eslint-disable-line
-    // TODO
+  app.post('/residency/property-types', async (req, res) => {
+    const propertyType = await schema.validate(req.body, apiSchemas.property.propertyType)
+      .catch(error => res.status(400).send(error));
+
+    const { residency_id, name } = propertyType;
+
+    try {
+      const query = `INSERT INTO property_type (residency_id, name) VALUES (${residency_id}, '${name}')`;
+
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Property type saved succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
   });
 
   // PUT
-  app.put('/residency/property-types', async (req, res) => { // eslint-disable-line
-    // TODO
+  app.put('/residency/property-types', async (req, res) => {
+    const { id, name } = req.body;
+
+    if (!id) return res.status(400).send('missing `id` parameter');
+    if (!name) return res.status(400).send('missing `name` parameter');
+
+    try {
+      const query = `UPDATE property_type SET name='${name}' WHERE id=${id}`;
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Property type updated succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
   });
 
+  // DELETE
+  app.delete('/residency/property-types', async (req, res) => {
+    const { id } = req.body;
+
+    if (!id) return res.status(400).send('missing `id` parameter');
+
+    try {
+      const query = `DELETE FROM property_type WHERE id=${id}`;
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Property type removed succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
   /* --------------------- SERVICE --------------------- */
 
