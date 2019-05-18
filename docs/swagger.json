@@ -11,6 +11,10 @@
     {
       "name": "User",
       "description": "Endpoints relacionados con los residentes"
+    },
+    {
+      "name": "PropertyType",
+      "description": "Endpoints relacionados con los tipos de propiedades de las residencias"
     }
   ],
   "consumes": [
@@ -87,6 +91,75 @@
           }
         }
       }
+    },
+    "/residency/property-types": {
+      "parameters": [
+        {
+          "name": "residency_id",
+          "in": "body",
+          "required": true,
+          "description": "id de la residencia de la cual queremos obtener todos los tipos de propiedades",
+          "type": "string",
+          "example": {
+            "residency_id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "PropertyType"
+        ],
+        "summary": "Obtener todos los tipos de propiedades dado un residency_id",
+        "responses": {
+          "200": {
+            "example": [
+              {
+                "id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b",
+                "residency_id": "e1ac73f8-c39e6bbd523acc4b-b047-46bc",
+                "name": "Penthouse"
+              },
+              {
+                "id": "6bbd523acc4a-b047-46bc-c39e-",
+                "residency_id": "e1ac73f8-c39e6bbe1ac73f8-b047-lkj9",
+                "name": "House with terrace"
+              }
+            ]
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PropertyType"
+        ],
+        "summary": "Crear un nuevo tipo de propiedad dentro de una residencia",
+        "responses": {
+          "200": {
+            "example": "Property type saved succesfully"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PropertyType"
+        ],
+        "summary": "Actualizar el nombre de un tipo de propiedad de una residencia (el único campo actualizable es el nombre)",
+        "responses": {
+          "200": {
+            "example": "Property type updated succesfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PropertyType"
+        ],
+        "summary": "Eliminar un tipo de propiedad de una residencia",
+        "responses": {
+          "200": {
+            "example": "Property type removed succesfully"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -133,20 +206,25 @@
     "Property Type": {
       "required": [
         "id",
-        "name",
-        "multiplier_factor"
+        "residency_id",
+        "name"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
-        "name": {
+        "residency_id": {
           "type": "string"
         },
-        "multiplier_factor": {
-          "type": "float"
+        "name": {
+          "type": "string"
         }
-      }
+      },
+      "example": {
+        "id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b",
+        "residency_id": "6bbd523acc4b-c39e-46bc-b047-e1ac73f8",
+        "name": "Penthouse"
+       }
     },
     "Property Service": {
       "required": [
