@@ -181,6 +181,7 @@ let connection;
   });
 
   /* --------------------- DEBTS --------------------- */
+
   // GET
 
   // POST
@@ -188,6 +189,7 @@ let connection;
   // PUT
 
   /* --------------------- PROPERTY --------------------- */
+
   // GET
 
   // POST
@@ -195,13 +197,35 @@ let connection;
   // PUT
 
   /* ------------------- PROPERTY-TYPE ------------------- */
+
   // GET
+  app.get('/residency/property-types', async (req, res) => {
+    try {
+      const response = await promisifyQuery(connection, `SELECT * FROM property_type WHERE residency_id=${req.body.residency_id}`);
+      const property_types = response.map(property_type => ({
+        id: property_type.id,
+        name: property_type.name,
+      }));
+
+      return res.status(200).send({ property_types });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
   // POST
+  app.post('/residency/property-types', async (req, res) => { // eslint-disable-line
+    // TODO
+  });
 
   // PUT
+  app.put('/residency/property-types', async (req, res) => { // eslint-disable-line
+    // TODO
+  });
+
 
   /* --------------------- SERVICE --------------------- */
+
   // GET
 
   // POST
