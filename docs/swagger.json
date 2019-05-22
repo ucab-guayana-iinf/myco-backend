@@ -160,6 +160,298 @@
           }
         }
       }
+    },
+    "/residency/bills": {
+      "get":{
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "body",
+            "required": true,
+            "description": "id de la propiedad de la cual queremos obtener todas las facturas",
+            "type": "string",
+            "example": {
+              "property_id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b"
+            }
+          }
+        ],
+        "tags": [
+          "Bills"
+        ],
+        "summary": "Obtener todas las facturas de una propiedad a partir de su property_id",
+        "responses": {
+          "200":{
+            "example":[
+              {
+                "id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b",
+                "property_id": "e1ac73f8-c39e6bbd523acc4b-b047-46bc",
+                "monthly_paymment": 260,
+                "debt": 940,
+                "special_fee": 140,
+                "other": 240,
+                "creation_date": "Thu May 16 2019 13:43:13 GMT-0400 (GMT-04:00)",
+                "last_update": "Thu May 16 2019 13:43:42 GMT-0400 (GMT-04:00)"
+              }
+            ]
+          }
+        }
+      },
+      "post": {
+        "parameters": [
+        {
+          "name": "property_id",
+          "in": "body",
+          "required": true,
+          "description": "id de la propiedad a la que se carga la factura",
+          "type": "string",
+          "example": {
+            "property_id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b"
+          }
+        },
+        {
+          "name": "monthly_payment",
+          "in": "body",
+          "required": true,
+          "description": "Cantidad que el dueño de la propiedad pagara mensualmente",
+          "type": "float",
+          "example": {
+            "monthly_paymment": 200
+          }
+        },
+        {
+          "name": "debt",
+          "in": "body",
+          "required": true,
+          "description": "Deuda total del condominio",
+          "type": "float",
+          "example": {
+            "debt": 2000
+          }
+        },
+        {
+          "name": "special_fee",
+          "in": "body",
+          "required": true,
+          "description": "Cantidad para la cuota especial",
+          "type": "float",
+          "example": {
+            "special_fee": 150
+          }
+        },
+        {
+          "name": "other",
+          "in": "body",
+          "required": true,
+          "description": "Cantidad de algun otro gasto realizado",
+          "type": "float",
+          "example": {
+            "other": 180
+          }
+        }
+      ],
+        "tags": [
+          "Bills"
+        ],
+        "summary": "Crear una nueva factura",
+        "responses": {
+          "200": {
+            "example": "Bill saved succesfully"
+          }
+        }
+      },
+      "put": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "body",
+            "required": true,
+            "description": "id de la factura que se modificara",
+            "type": "string",
+            "example": {
+              "property_id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b"
+            }
+          },
+          {
+            "name": "property_id",
+            "in": "body",
+            "required": true,
+            "description": "id de la propiedad a la que se carga la factura",
+            "type": "string",
+            "example": {
+              "property_id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b"
+            }
+          },
+          {
+            "name": "monthly_payment",
+            "in": "body",
+            "required": true,
+            "description": "Cantidad que el dueño de la propiedad pagara mensualmente",
+            "type": "float",
+            "example": {
+              "monthly_paymment": 200
+            }
+          },
+          {
+            "name": "debt",
+            "in": "body",
+            "required": true,
+            "description": "Deuda total del condominio",
+            "type": "float",
+            "example": {
+              "debt": 2000
+            }
+          },
+          {
+            "name": "special_fee",
+            "in": "body",
+            "required": true,
+            "description": "Cantidad para la cuota especial",
+            "type": "float",
+            "example": {
+              "special_fee": 150
+            }
+          },
+          {
+            "name": "other",
+            "in": "body",
+            "required": true,
+            "description": "Cantidad de algun otro gasto realizado",
+            "type": "float",
+            "example": {
+              "other": 180
+            }
+          }
+        ],
+        "tags": [
+          "Bills"
+        ],
+        "summary": "Actualizar los datos de una factura (los únicos campos no actualizables son el id y la fecha de creacion)",
+        "responses": {
+          "200": {
+            "example": "Property type updated succesfully"
+          }
+        }
+      }
+    },
+    "/residency/create":{
+      "post":{
+        "parameters":[
+          {
+            "name": "admin_id",
+            "in": "body",
+            "required": true,
+            "description":"id del administrador a cargo de esta residencia",
+            "type": "string",
+            "example":{
+              "admin_id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b"
+            }
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "required": true,
+            "description": "Nombre de la residencia",
+            "type": "string",
+            "example": {
+              "name": "Residencias Arivana"
+            }
+          },
+          {
+            "name": "yardage",
+            "in": "body",
+            "required": true,
+            "description": "Espacio en yardas que ocupa la residencia",
+            "type":"float",
+            "example":{
+                "yardage": 3000
+            }
+          }
+        ],
+        "tags":[
+          "Residency"
+        ],
+        "summary": "Crear una nueva residencia",
+        "responses":{
+          "200":{
+            "example":"Residency created succesfully"
+          }
+        }
+      }
+    },
+    "/residency/:id":{
+      "get":{
+        "tags":[
+          "Residency"
+        ],
+        "summary":"Obtener una residencia a partir de su id",
+        "responses":{
+          "200":{
+            "example":[
+              {
+                "id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b",
+                "admin_id": "6bbd523acc4a-b047-46bc-c39e-",
+                "name": "Residencias Arivana",
+                "yardage": 2000
+              }
+            ]
+          }
+        }
+      }
+    },
+    "/residency/update":{
+      "put":{
+        "parameters":[
+          {
+            "name": "id",
+            "in": "body",
+            "required": true,
+            "description":"id de la residencia que sera actualizada",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          },
+          {
+            "name": "admin_id",
+            "in": "body",
+            "required": true,
+            "description":"id del administrador a cargo de esta residencia",
+            "type": "string",
+            "example":{
+              "admin_id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b"
+            }
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "required": true,
+            "description": "Nombre de la residencia",
+            "type": "string",
+            "example": {
+              "name": "Residencias Arivana"
+            }
+          },
+          {
+            "name": "yardage",
+            "in": "body",
+            "required": true,
+            "description": "Espacio en yardas que ocupa la residencia",
+            "type":"float",
+            "example":{
+                "yardage": 3000
+            }
+          }
+        ],
+        "tags":[
+          "Residency"
+        ],
+        "summary": "Actualizar los datos de una residencia a partir de su id",
+        "responses":{
+          "200":{
+            "example":"Residency updated succesfully"
+          }
+        }
+      }
     }
   },
   "definitions": {

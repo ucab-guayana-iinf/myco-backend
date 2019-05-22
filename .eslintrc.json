@@ -15,6 +15,10 @@
     "rules": {
       "no-console": "off",
       "camelcase": "off",
+      "linebreak-style": [
+        "error",
+        "windows"
+      ],
       "import/no-extraneous-dependencies": [ "error", {
         "devDependencies": true,
         "optionalDependencies": false,

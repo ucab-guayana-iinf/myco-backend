@@ -298,7 +298,7 @@ let connection;
        `;
 
       await promisifyQuery(connection, query);
-      return res.status(200).send('Successfully created residency');
+      return res.status(200).send('Residency created succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -320,8 +320,6 @@ let connection;
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
-
-  /* ---------------------To finish--------------------- */
 
   app.put('/residency/update', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
