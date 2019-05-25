@@ -378,8 +378,20 @@
         }
       }
     },
-    "/residency/:id":{
+    "/residency/residencies":{
       "get":{
+        "parameters":[
+          {
+            "name": "id",
+            "in": "body",
+            "required": true,
+            "description":"id de la residencia a buscar",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523acc4b"
+            }
+          }
+        ],
         "tags":[
           "Residency"
         ],
@@ -452,7 +464,265 @@
           }
         }
       }
+    },
+    "/residency/expense":{
+      "post":{
+        "parameters":[
+          {
+            "name": "user_id",
+            "in": "body",
+            "required": true,
+            "description":"id del usuario responsable del gasto",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          },
+          {
+            "name":"amount",
+            "in": "body",
+            "required": true,
+            "description": "Cantidad que el usuario va a pagar",
+            "type": "float",
+            "example":{
+              "amount": 3000
+            }
+          },
+          {
+            "name": "concept",
+            "in": "body",
+            "required": true,
+            "description": "Descripcion del gasto realizado",
+            "type": "string",
+            "example":{
+              "concept": "Reparacion del porton principal"
+            }
+          }
+        ],
+        "tags":[
+          "Expenses"
+        ],
+        "summary": "Crear un nuevo gasto de la residencia",
+        "responses":{
+          "200":{
+            "example":"Expense saved succesfully"
+          }
+        }
+      },
+      "get":{
+        "parameters":[
+          {
+            "name": "user_id",
+            "in": "body",
+            "required": true,
+            "description": "id del usuario al que fueron cargados los gastos",
+            "type": "string",
+            "example":{
+              "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          }
+        ],
+        "tags":[
+          "Expenses"
+        ],
+        "summary": "Obtener los gastos de un usuario a partir de su id",
+        "responses":{
+          "200":{
+            "example":[
+              {
+                "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b",
+                "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523lkD667",
+                "amount": 3000,
+                "concept": "Reparacion del motor del porton",
+                "creation_date": "Fri May 24 2019 18:55:44 GMT-0400 (GMT-04:00)"
+              }
+            ]
+          }
+        }
+      },
+      "put":{
+        "parameters":[
+          {
+            "name": "id",
+            "in": "body",
+            "required": true,
+            "description": "id del gasto que se modificara",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "body",
+            "required": true,
+            "description":"id del usuario responsable del gasto",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          },
+          {
+            "name":"amount",
+            "in": "body",
+            "required": true,
+            "description": "Cantidad que el usuario va a pagar",
+            "type": "float",
+            "example":{
+              "amount": 3000
+            }
+          },
+          {
+            "name": "concept",
+            "in": "body",
+            "required": true,
+            "description": "Descripcion del gasto realizado",
+            "type": "string",
+            "example":{
+              "concept": "Reparacion del porton principal"
+            }
+          }
+        ],
+        "tags":[
+          "Expenses"
+        ],
+        "summary": "Actualizar un gasto a partir de su id",
+        "responses":{
+          "200":{
+            "example": "Expense updated succesfully"
+        }
+      }
     }
+  },
+  "/resident/expense":{
+    "post":{
+      "parameters":[
+        {
+          "name": "user_id",
+          "in": "body",
+          "required": true,
+          "description":"id del usuario responsable del gasto",
+          "type": "string",
+          "example":{
+            "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+          }
+        },
+        {
+          "name":"amount",
+          "in": "body",
+          "required": true,
+          "description": "Cantidad que el usuario va a pagar",
+          "type": "float",
+          "example":{
+            "amount": 3000
+          }
+        },
+        {
+          "name": "concept",
+          "in": "body",
+          "required": true,
+          "description": "Descripcion del gasto realizado",
+          "type": "string",
+          "example":{
+            "concept": "Reposicion de bombillos piso 5"
+          }
+        }
+      ],
+      "tags":[
+        "Expenses"
+      ],
+      "summary": "Crear un nuevo gasto de la residencia",
+      "responses":{
+        "200":{
+          "example":"Expense saved succesfully"
+        }
+      }
+    },
+    "get":{
+      "parameters":[
+        {
+          "name": "user_id",
+          "in": "body",
+          "required": true,
+          "description": "id del usuario al que fueron cargados los gastos",
+          "type": "string",
+          "example":{
+            "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+          }
+        }
+      ],
+      "tags":[
+        "Expenses"
+      ],
+      "summary": "Obtener los gastos de un usuario a partir de su id",
+      "responses":{
+        "200":{
+          "example":[
+            {
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b",
+              "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523lkD667",
+              "amount": 3000,
+              "concept": "Reparacion tuberia Apto. 105",
+              "creation_date": "Fri May 24 2019 18:55:44 GMT-0400 (GMT-04:00)"
+            }
+          ]
+        }
+      }
+    },
+    "put":{
+      "parameters":[
+        {
+          "name": "id",
+          "in": "body",
+          "required": true,
+          "description": "id del gasto que se modificara",
+          "type": "string",
+          "example":{
+            "id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+          }
+        },
+        {
+          "name": "user_id",
+          "in": "body",
+          "required": true,
+          "description":"id del usuario responsable del gasto",
+          "type": "string",
+          "example":{
+            "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+          }
+        },
+        {
+          "name":"amount",
+          "in": "body",
+          "required": true,
+          "description": "Cantidad que el usuario va a pagar",
+          "type": "float",
+          "example":{
+            "amount": 3000
+          }
+        },
+        {
+          "name": "concept",
+          "in": "body",
+          "required": true,
+          "description": "Descripcion del gasto realizado",
+          "type": "string",
+          "example":{
+            "concept": "Reparacion del porton principal"
+          }
+        }
+      ],
+      "tags":[
+        "Expenses"
+      ],
+      "summary": "Actualizar un gasto a partir de su id",
+      "responses":{
+        "200":{
+          "example": "Expense updated succesfully"
+      }
+    }
+  }
+}
   },
   "definitions": {
     "Residency": {
