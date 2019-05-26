@@ -189,11 +189,59 @@ let connection;
 
   /* --------------------- DEBTS --------------------- */
 
-  // GET
+  // GET - all residency debts
+  app.get('/residency/debts', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
 
-  // POST
+    if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
 
-  // PUT
+    const { residency_id } = req.body;
+    if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
+
+    try {
+      const debts = await promisifyQuery(connection, `SELECT * FROM debt WHERE residency_id=${residency_id}`);
+
+      return res.status(200).send({ debts, amount: debts.length });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // GET - all debts based on property_id
+  app.get('/resident/debts', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
+
+    const { property_id } = req.body;
+    if (!property_id) return res.status(400).send('missing `property_id` parameter');
+
+    try {
+      const debts = await promisifyQuery(connection, `SELECT * FROM debt WHERE property_id=${property_id}`);
+
+      return res.status(200).send({ debts, amount: debts.length });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // PUT - Update debt based on debt id
+  app.put('/debts', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
+
+    const { status, id } = req.body;
+    if (!status) return res.status(400).send('missing `status` parameter');
+
+    try {
+      await promisifyQuery(connection, `UPDATE debt SET status='${status}' WHERE id=${id}`);
+      return res.status(200).send('Debt updated');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
 
   /* --------------------- PROPERTY --------------------- */
 
@@ -312,7 +360,7 @@ let connection;
     }
   });
 
-  // GET
+  // GET - residences
   app.get('/residency/residencies', async (req, res) => {
     const { id } = req.body;
 
@@ -332,6 +380,7 @@ let connection;
     }
   });
 
+  // PUT
   app.put('/residency/update', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
 
@@ -353,33 +402,7 @@ let connection;
     }
   });
 
-  app.get('/residency/residents', async (req, res) => {
-    const user = utils.verifyToken(res, req.headers);
-
-    if (user.role !== 'ADMIN') {
-      return res.status(403).send('Forbidden');
-    }
-
-    const residency = await schema.validate(req.body, apiSchemas.residency)
-      .catch(error => res.status(400).send(error));
-
-    const { admin_id, name } = residency;
-
-    try {
-      const query1 = `
-        INSERT INTO residency
-          (admin_id, name)
-        VALUES
-          ('${admin_id}', '${name}')
-      `;
-
-      await promisifyQuery(connection, query1);
-      return res.status(200).send('Successfully created residency');
-    } catch (error) {
-      return res.status(409).send(`Conflict:\n${error}`);
-    }
-  });
-
+  // GET - residents
   app.get('/residency/residents', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
 
@@ -455,6 +478,7 @@ let connection;
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
+
   // PUT
   app.put('/residency/expense', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
@@ -478,6 +502,7 @@ let connection;
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
+
   /* ------------------- RESIDENCY SERVICES --------------------- */
 
   // POST
@@ -553,6 +578,7 @@ let connection;
   });
 
   /* --------------------------- RESIDENT EXPENSES ------------------------------- */
+
   // POST
   app.post('/resident/expense', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
@@ -602,6 +628,7 @@ let connection;
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
+
   // PUT
   app.put('/resident/expense', async (req, res) => {
     const user = utils.verifyToken(res, req.headers);
@@ -625,6 +652,7 @@ let connection;
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
+
   /* ---------------------------------------------------- */
 
   app.get('/', (req, res) => {

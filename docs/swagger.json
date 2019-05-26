@@ -9,8 +9,16 @@
   "basePath": "/",
   "tags": [
     {
-      "name": "User",
-      "description": "Endpoints relacionados con los residentes"
+      "name": "Residency",
+      "description": "Endpoints relacionados con las residencias"
+    },
+    {
+      "name": "Resident",
+      "description": "Endpoints relacionados con las residentes"
+    },
+    {
+      "name": "Bills",
+      "description": "Endpoints relacionados con las facturas"
     },
     {
       "name": "PropertyType",
@@ -24,74 +32,6 @@
     "application/json"
   ],
   "paths": {
-    "/users": {
-      "post": {
-        "tags": [
-          "User"
-        ],
-        "description": "Create new user in system",
-        "parameters": [
-          {
-            "name": "user",
-            "in": "body",
-            "description": "User that we want to create",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "New user is created",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "User"
-        ],
-        "summary": "Get all users in system",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
-          }
-        }
-      }
-    },
-    "/users/{userId}": {
-      "parameters": [
-        {
-          "name": "userId",
-          "in": "path",
-          "required": true,
-          "description": "ID of user that we want to find",
-          "type": "string"
-        }
-      ],
-      "get": {
-        "tags": [
-          "User"
-        ],
-        "summary": "Get user with given ID",
-        "responses": {
-          "200": {
-            "description": "User is found",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
-          }
-        }
-      }
-    },
     "/residency/property-types": {
       "parameters": [
         {
@@ -590,139 +530,192 @@
         "responses":{
           "200":{
             "example": "Expense updated succesfully"
-        }
-      }
-    }
-  },
-  "/resident/expense":{
-    "post":{
-      "parameters":[
-        {
-          "name": "user_id",
-          "in": "body",
-          "required": true,
-          "description":"id del usuario responsable del gasto",
-          "type": "string",
-          "example":{
-            "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
           }
-        },
-        {
-          "name":"amount",
-          "in": "body",
-          "required": true,
-          "description": "Cantidad que el usuario va a pagar",
-          "type": "float",
-          "example":{
-            "amount": 3000
-          }
-        },
-        {
-          "name": "concept",
-          "in": "body",
-          "required": true,
-          "description": "Descripcion del gasto realizado",
-          "type": "string",
-          "example":{
-            "concept": "Reposicion de bombillos piso 5"
-          }
-        }
-      ],
-      "tags":[
-        "Expenses"
-      ],
-      "summary": "Crear un nuevo gasto de la residencia",
-      "responses":{
-        "200":{
-          "example":"Expense saved succesfully"
         }
       }
     },
-    "get":{
-      "parameters":[
-        {
-          "name": "user_id",
-          "in": "body",
-          "required": true,
-          "description": "id del usuario al que fueron cargados los gastos",
-          "type": "string",
-          "example":{
-            "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
-          }
-        }
-      ],
-      "tags":[
-        "Expenses"
-      ],
-      "summary": "Obtener los gastos de un usuario a partir de su id",
-      "responses":{
-        "200":{
-          "example":[
-            {
-              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b",
-              "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523lkD667",
-              "amount": 3000,
-              "concept": "Reparacion tuberia Apto. 105",
-              "creation_date": "Fri May 24 2019 18:55:44 GMT-0400 (GMT-04:00)"
+    "/residency/debts": {
+      "get": {
+        "parameters":[
+          {
+            "name": "residency_id",
+            "in": "body",
+            "required": true,
+            "description": "id de la residencia de la cual queremos obtener las deudas",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
             }
-          ]
+          }
+        ],
+        "tags":["Residency"],
+        "summary": "Obtener todas las deudas de una residencia, basado en el `residency_id`"
+      }
+    },
+    "/resident/debts": {
+      "get": {
+        "parameters":[
+          {
+            "name": "residency_id",
+            "in": "body",
+            "required": true,
+            "description": "id de la propiedad del residente de la cual queremos obtener las deudas",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+            }
+          }
+        ],
+        "tags": ["Resident"],
+        "summary": "Obtener todas las deudas de una propiedad, basado en el `property_id`"
+      }
+    },
+    "/resident/expense":{
+      "post":{
+        "parameters":[
+          {
+            "name": "user_id",
+            "in": "body",
+            "required": true,
+            "description":"id del usuario responsable del gasto",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          },
+          {
+            "name":"amount",
+            "in": "body",
+            "required": true,
+            "description": "Cantidad que el usuario va a pagar",
+            "type": "float",
+            "example":{
+              "amount": 3000
+            }
+          },
+          {
+            "name": "concept",
+            "in": "body",
+            "required": true,
+            "description": "Descripcion del gasto realizado",
+            "type": "string",
+            "example":{
+              "concept": "Reposicion de bombillos piso 5"
+            }
+          }
+        ],
+        "tags":[
+          "Expenses"
+        ],
+        "summary": "Crear un nuevo gasto de la residencia",
+        "responses":{
+          "200":{
+            "example":"Expense saved succesfully"
+          }
+        }
+      },
+      "get":{
+        "parameters":[
+          {
+            "name": "user_id",
+            "in": "body",
+            "required": true,
+            "description": "id del usuario al que fueron cargados los gastos",
+            "type": "string",
+            "example":{
+              "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          }
+        ],
+        "tags":[
+          "Expenses"
+        ],
+        "summary": "Obtener los gastos de un usuario a partir de su id",
+        "responses":{
+          "200":{
+            "example":[
+              {
+                "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b",
+                "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523lkD667",
+                "amount": 3000,
+                "concept": "Reparacion tuberia Apto. 105",
+                "creation_date": "Fri May 24 2019 18:55:44 GMT-0400 (GMT-04:00)"
+              }
+            ]
+          }
+        }
+      },
+      "put":{
+        "parameters":[
+          {
+            "name": "id",
+            "in": "body",
+            "required": true,
+            "description": "id del gasto que se modificara",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "body",
+            "required": true,
+            "description":"id del usuario responsable del gasto",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          },
+          {
+            "name":"amount",
+            "in": "body",
+            "required": true,
+            "description": "Cantidad que el usuario va a pagar",
+            "type": "float",
+            "example":{
+              "amount": 3000
+            }
+          },
+          {
+            "name": "concept",
+            "in": "body",
+            "required": true,
+            "description": "Descripcion del gasto realizado",
+            "type": "string",
+            "example":{
+              "concept": "Reparacion del porton principal"
+            }
+          }
+        ],
+        "tags":[
+          "Expenses"
+        ],
+        "summary": "Actualizar un gasto a partir de su id",
+        "responses":{
+          "200":{
+            "example": "Expense updated succesfully"
+          }
         }
       }
     },
-    "put":{
-      "parameters":[
-        {
-          "name": "id",
-          "in": "body",
-          "required": true,
-          "description": "id del gasto que se modificara",
-          "type": "string",
-          "example":{
-            "id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+    "/debts": {
+      "put": {
+        "parameters":[
+          {
+            "name": "id",
+            "in": "body",
+            "required": true,
+            "description": "id de la deuda que queremos actualizar",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+            }
           }
-        },
-        {
-          "name": "user_id",
-          "in": "body",
-          "required": true,
-          "description":"id del usuario responsable del gasto",
-          "type": "string",
-          "example":{
-            "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
-          }
-        },
-        {
-          "name":"amount",
-          "in": "body",
-          "required": true,
-          "description": "Cantidad que el usuario va a pagar",
-          "type": "float",
-          "example":{
-            "amount": 3000
-          }
-        },
-        {
-          "name": "concept",
-          "in": "body",
-          "required": true,
-          "description": "Descripcion del gasto realizado",
-          "type": "string",
-          "example":{
-            "concept": "Reparacion del porton principal"
-          }
-        }
-      ],
-      "tags":[
-        "Expenses"
-      ],
-      "summary": "Actualizar un gasto a partir de su id",
-      "responses":{
-        "200":{
-          "example": "Expense updated succesfully"
+        ],
+        "summary": "Actualizar el estado de una propiedad basado en el `id` de la deuda"
       }
     }
-  }
-}
   },
   "definitions": {
     "Residency": {

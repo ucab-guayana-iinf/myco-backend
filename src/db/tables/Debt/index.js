@@ -2,6 +2,7 @@ const Debt = {
   name: 'debt',
   fields: `
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    residency_id INT NOT NULL,
     property_id INT NOT NULL,
     amount FLOAT(10, 2) NOT NULL,
     description VARCHAR(256) NOT NULL,
