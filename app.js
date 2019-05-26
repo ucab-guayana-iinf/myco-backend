@@ -197,10 +197,91 @@ let connection;
 
   /* --------------------- PROPERTY --------------------- */
   // GET
+    
+    app.get('/residency/properties', async (req, res) => {
+    
+    try {
+      const response = await promisifyQuery(connection, `SELECT * FROM property WHERE residency_id = ` + req.body.residency_id);
+      const properties = response.map(properties => ({
+        id: properties.id,
+        residency_id: properties.residency_id,
+        property_type_id: properties.property_type_id,
+        user_id: properties.user_id,
+        yardage: properties.yardage,
+        departament_num: properties.departament_num,
+      }));
+
+      return res.status(200).send({properties});
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
 
   // POST
 
+    app.post('/residency/properties', async (req, res) => {
+      const user = utils.verifyToken(res, req.headers);
+
+      if (user.role !== 'ADMIN') {
+        return res.status(403).send('Forbidden');
+      }
+
+      const properties = await schema.validate(req.body, apiSchemas.residency.property)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+      const {
+        id,
+        residency_id,
+        property_type_id,
+        user_id,
+        yardage,
+        departament_num,
+      } = properties;
+
+      try{
+        const query = `INSERT INTO service (id, residency_id, property_type_id, user_id, yardage, departament_num) VALUES
+        ('${id}', '${residency_id}', '${property_type_id}', '${user_id}', '${yardage}', '${departament_num}')`;
+
+        await promisifyQuery(connection, query);
+        return res.status(200).send('Property saved succesfully');
+      } catch (error) {
+        return res.status(409).send(`Conflict:\n${error}`);
+    }
+    });
+
   // PUT
+
+    app.put('/residency/properties', async (req, res) => {
+      const user = utils.verifyToken(res, req.headers);
+
+      if (user.role != 'ADMIN'){
+        return res.status(403).send('Forbidden');
+      }
+
+      const properties = await schema.validate(req.body, apiSchemas.residency.property)
+      .catch((error) => {
+        res.status(400).send('error');
+      });
+
+      const {
+        residency_id,
+        property_type_id,
+        user_id,
+        yardage,
+        departament_num,
+      } = properties;
+
+      try{
+        var query = `UPDATE property SET residency_id = '${residency_id}', property_type_id = '${property_type_id}', user_id = '${user_id}', yardage = '${yardage}', departament_num = '${departament_num}' WHERE id = '${req.body.id}'`;
+        await promisifyQuery(connection, query);
+        return res.status(200).send('Property updated successfuly');
+      } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+      }
+    });
 
   /* ------------------- PROPERTY-TYPE ------------------- */
   // GET
@@ -295,7 +376,7 @@ let connection;
       } = service;
 
       try{
-        const query = `INSERT INTO service (id, property_id, price, name) VALUES
+        const query = `INSERT INTO service (id, residency_id, price, name) VALUES
         ('${id}', '${residency_id}', '${price}', '${name}')`;
 
         await promisifyQuery(connection, query);
