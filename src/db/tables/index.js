@@ -1,6 +1,7 @@
 const Bill = require('./Bill');
 const Debt = require('./Debt');
 const Expense = require('./Expense');
+const Post = require('./Post');
 const Property = require('./Property');
 const PropertyType = require('./PropertyType');
 const PropertyService = require('./PropertyService');
@@ -12,6 +13,7 @@ const tables = [
   Bill,
   Debt,
   Expense,
+  Post,
   Property,
   PropertyType,
   PropertyService,
