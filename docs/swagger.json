@@ -21,6 +21,10 @@
       "description": "Endpoints relacionados con las facturas"
     },
     {
+      "name": "Posts",
+      "description": "Endpoints relacionas a las publicaciones"
+    },
+    {
       "name": "PropertyType",
       "description": "Endpoints relacionados con los tipos de propiedades de las residencias"
     }
@@ -550,6 +554,64 @@
         ],
         "tags":["Residency"],
         "summary": "Obtener todas las deudas de una residencia, basado en el `residency_id`"
+      }
+    },
+    "/residency/post": {
+      "post": {
+        "parameters": [
+          {
+            "name": "residency_id",
+            "in": "body",
+            "description": "id de la residencia",
+            "type": "string",
+            "example": {
+              "residency_id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "body",
+            "description": "id del usuario que publica",
+            "type": "string",
+            "example": {
+              "user_id": "e1ac73f8-c39e-46bc-b047-asdfasdf"
+            }
+          },
+          {
+            "name": "content",
+            "in": "body",
+            "description": "contenido de la publicación",
+            "type": "string",
+            "example": {
+              "content": "Mañana nos van a cortar el agua, tomen previsiones"
+            }
+          }
+        ],
+        "tags": ["Posts"],
+        "summary": "Realizar una publicación al feed de la residencia"
+      }
+    },
+    "/residency/feed": {
+      "get": {
+        "parameters": [
+          {
+            "name": "residency_id",
+            "in": "body",
+            "description": "id de la residencia",
+            "type": "string",
+            "example": {
+              "residency_id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+            }
+          }
+        ],
+        "tags": ["Posts"],
+        "summary": "Obtener el feed de la residencia",
+        "responses": {
+          "200": {
+            "description": "Retorna un array de posts, con el formato similar al del ejemplo",
+            "example": "[\n  {\n    \"author\": \"Angel Rodríguez\",\n    \"content\": \"Nos van a cortar el agua manaure!\",\n    \"timestamp\": \"Hace 30 minutos\"\n  },\n  {\n    \"author\": \"Ricardo Castellanos\",\n    \"content\": \"Primero la gasolina, ahora esto...\",\n    \"timestamp\": \"Hace 25 minutos\"\n  }\n]"
+          }
+        }
       }
     },
     "/resident/debts": {
