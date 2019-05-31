@@ -242,6 +242,36 @@ let connection;
     }
   });
 
+  /* ----------------------- POST ----------------------- */
+
+  // GET
+  app.get('/residency/feed', async (req, res) => { // eslint-disable-line
+    // TODO
+  });
+
+  // POST
+  app.post('/residency/post', async (req, res) => {
+    const post = await schema.validate(req.body, apiSchemas.post)
+      .catch(error => res.status(400).send(error));
+
+    if (post.content.length > 1999) return res.status(422).send('Content length limit is under 2000 characters');
+
+    const {
+      residency_id,
+      user_id,
+      content,
+    } = post;
+
+    try {
+      const query = `INSERT INTO post (residency_id, user_id, content) VALUES (${residency_id}, ${user_id}, '${content}')`;
+
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Property type saved succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+    // TODO
+  });
 
   /* --------------------- PROPERTY --------------------- */
 
