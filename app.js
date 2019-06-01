@@ -9,9 +9,11 @@ const chalk = require('chalk');
 const path = require('path');
 const schema = require('schm');
 const bcrypt = require('bcrypt');
+const moment = require('moment');
 
 const app = express();
 const apiSecret = { secret: 'MYCO-SECRET-SSHHHH' };
+moment.locale('es');
 
 const swaggerDocument = require('./docs/swagger.json');
 const swaggerConfig = require('./docs/config');
@@ -242,6 +244,71 @@ let connection;
     }
   });
 
+  /* ----------------------- POST ----------------------- */
+
+  // GET
+  app.get('/residency/feed', async (req, res) => {
+    const { residency_id } = req.body;
+
+    if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
+
+    const posts = [];
+
+    try {
+      const query = `SELECT * FROM post WHERE post.residency_id='${residency_id}'`;
+      const unformattedPosts = await promisifyQuery(connection, query);
+      const now = moment();
+
+      await Promise.all(
+        unformattedPosts.map(async (post) => {
+          const { user_id, content, creation_date } = post;
+          const elapsedTime = moment(creation_date).from(now);
+
+          const unformattedAuthor = await promisifyQuery(connection, `SELECT * FROM user WHERE user.id=${user_id}`);
+          const { name, lastname } = unformattedAuthor[0];
+          const author = `${name} ${lastname}`;
+
+          posts.push({
+            author,
+            content,
+            timestamp: elapsedTime,
+          });
+        }),
+      );
+
+      return res.status(200).send({ count: posts.length, posts });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // POST
+  app.post('/residency/post', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') return res.status(403).send('Forbidden - Only admins can post');
+
+    const post = await schema.validate(req.body, apiSchemas.post)
+      .catch(error => res.status(400).send(error));
+
+    if (post.content.length > 1999) return res.status(422).send('Content length limit is under 2000 characters');
+
+    const {
+      residency_id,
+      user_id,
+      content,
+    } = post;
+    const creation_date = moment();
+
+    try {
+      const query = `INSERT INTO post (residency_id, user_id, content, creation_date) VALUES (${residency_id}, ${user_id}, '${content}', '${creation_date}')`;
+
+      await promisifyQuery(connection, query);
+      return res.status(200).send('Post published successfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
   /* --------------------- PROPERTY --------------------- */
 
