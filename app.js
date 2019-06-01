@@ -525,7 +525,7 @@ let connection;
     } = service;
 
     try {
-      const query = `INSERT INTO service (id, property_id, price, name) VALUES
+      const query = `INSERT INTO service (id, residency_id, price, name) VALUES
         ('${id}', '${residency_id}', '${price}', '${name}')`;
 
       await promisifyQuery(connection, query);
@@ -548,6 +548,7 @@ let connection;
       const services = response.map(service => ({
         name: service.name,
         residency_id: service.residency_id,
+        price: service.price,
       }));
 
       return res.status(200).send(services);
@@ -558,6 +559,11 @@ let connection;
 
   // PUT
   app.put('/residency/service', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
     const service = await schema.validate(req.body, apiSchemas.residency.service)
       .catch(error => res.status(400).send(error));
 
