@@ -5,6 +5,7 @@ const post = require('./Post/post');
 const data = require('./Residency/data');
 const propertyType = require('./Property/propertyType');
 const expense = require('./Residency/expense');
+const service = require('./Residency/service');
 
 module.exports = {
   user: {
@@ -15,6 +16,7 @@ module.exports = {
     bill,
     data,
     expense,
+    service,
   },
   property: {
     propertyType,
