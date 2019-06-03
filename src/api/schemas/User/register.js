@@ -7,4 +7,5 @@ module.exports = schema({
   social_number: { type: String, required: true },
   role: { type: String, required: true },
   password: { type: String, required: true },
+  picture_url: { type: String, required: false },
 });

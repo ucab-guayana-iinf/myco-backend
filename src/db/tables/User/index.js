@@ -4,6 +4,7 @@ const User = {
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100),
     lastname VARCHAR(100),
+    picture_url VARCHAR(2000),
     email VARCHAR(100),
     social_number VARCHAR(20),
     password VARCHAR(100),

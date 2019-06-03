@@ -54,6 +54,7 @@ let connection;
       name,
       lastname,
       email,
+      picture_url,
       social_number,
       role,
       password,
@@ -64,9 +65,9 @@ let connection;
     try {
       const query = `
         INSERT INTO user
-          (name, lastname, email, social_number, role, password)
+          (name, lastname, email, picture_url, social_number, role, password)
         VALUES
-          ('${name}', '${lastname}', '${email}', '${social_number}', '${role}', '${hash}')
+          ('${name}', '${lastname}', '${email}', '${picture_url}', '${social_number}', '${role}', '${hash}')
       `;
 
       await promisifyQuery(connection, query);
