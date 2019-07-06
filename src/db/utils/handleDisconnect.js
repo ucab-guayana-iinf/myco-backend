@@ -1,6 +1,6 @@
 const connect = require('./connect');
 
-function handleDisconnect(client) {
+function handleDisconnect(client, cb) {
   client.on('error', async (error) => {
     console.log(`> Re-connecting lost MySQL connection: ${error}`);
 
@@ -8,6 +8,7 @@ function handleDisconnect(client) {
 
     // eslint-disable-next-line
     client = connection;
+    cb(connection);
     handleDisconnect(client);
   });
 }

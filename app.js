@@ -34,7 +34,9 @@ const keepAliveDB = (con) => {
 
 (async () => {
   connection = await connect();
-  handleDisconnect(connection);
+  handleDisconnect(connection, (con) => {
+    connection = con;
+  });
   keepAliveDB(connection);
 
   /* ------------------ EXPRESS CONFIG ------------------ */
