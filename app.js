@@ -19,25 +19,31 @@ const swaggerDocument = require('./docs/swagger.json');
 const swaggerConfig = require('./docs/config');
 const apiSchemas = require('./src/api/schemas');
 const { connect, promisifyQuery } = require('./src/db');
-const handleDisconnect = require('./src/db/utils/handleDisconnect');
+// const handleDisconnect = require('./src/db/utils/handleDisconnect');
 const utils = require('./src/utils');
 
 const saltRounds = 10;
 const PORT = 5000;
-let connection;
+const db = { connection: null };
 
-const keepAliveDB = (con) => {
+const keepAliveDB = ({ connection }) => {
   setInterval(() => {
-    con.query('SELECT 1');
+    connection.query('SELECT 1');
   }, 120000);
 };
 
-(async () => {
-  connection = await connect();
-  handleDisconnect(connection, (con) => {
-    connection = con;
+const handleError = ({ connection }) => {
+  connection.on('error', async (error) => {
+    console.log(`> Re-connecting lost MySQL connection: ${error}`);
+
+    connection = await connect(); // eslint-disable-line
   });
-  keepAliveDB(connection);
+};
+
+(async () => {
+  db.connection = await connect();
+  handleError(db);
+  keepAliveDB(db);
 
   /* ------------------ EXPRESS CONFIG ------------------ */
 
@@ -79,7 +85,7 @@ const keepAliveDB = (con) => {
           ('${name}', '${lastname}', '${email}', '${picture_url}', '${social_number}', '${role}', '${hash}')
       `;
 
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Register Success');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -100,7 +106,7 @@ const keepAliveDB = (con) => {
         LIMIT 1
       `;
 
-      const response = await promisifyQuery(connection, query1);
+      const response = await promisifyQuery(db.connection, query1);
       const user = response[0];
 
       const match = bcrypt.compare(password, user.password);
@@ -125,7 +131,7 @@ const keepAliveDB = (con) => {
     if (!property_id) return res.status(400).send('missing `property_id` parameter');
 
     try {
-      const response = await promisifyQuery(connection, `SELECT * FROM bill WHERE property_id = ${req.body.property_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM bill WHERE property_id = ${req.body.property_id}`);
       const bills = response.map(_bills => ({
         id: _bills.id,
         property_id: _bills.property_id,
@@ -165,7 +171,7 @@ const keepAliveDB = (con) => {
         ('${property_id}', '${monthly_paymment}', '${debt}', '${special_fee}', '${other}', '${date}', '${date}')
       `;
 
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Bill saved succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -192,7 +198,7 @@ const keepAliveDB = (con) => {
 
     try {
       const query = `UPDATE bill SET property_id = '${property_id}', monthly_paymment = '${monthly_paymment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Bill updated successfuly');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -211,7 +217,7 @@ const keepAliveDB = (con) => {
     if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
 
     try {
-      const debts = await promisifyQuery(connection, `SELECT * FROM debt WHERE residency_id=${residency_id}`);
+      const debts = await promisifyQuery(db.connection, `SELECT * FROM debt WHERE residency_id=${residency_id}`);
 
       return res.status(200).send({ debts, amount: debts.length });
     } catch (error) {
@@ -229,7 +235,7 @@ const keepAliveDB = (con) => {
     if (!property_id) return res.status(400).send('missing `property_id` parameter');
 
     try {
-      const debts = await promisifyQuery(connection, `SELECT * FROM debt WHERE property_id=${property_id}`);
+      const debts = await promisifyQuery(db.connection, `SELECT * FROM debt WHERE property_id=${property_id}`);
 
       return res.status(200).send({ debts, amount: debts.length });
     } catch (error) {
@@ -247,7 +253,7 @@ const keepAliveDB = (con) => {
     if (!status) return res.status(400).send('missing `status` parameter');
 
     try {
-      await promisifyQuery(connection, `UPDATE debt SET status='${status}' WHERE id=${id}`);
+      await promisifyQuery(db.connection, `UPDATE debt SET status='${status}' WHERE id=${id}`);
       return res.status(200).send('Debt updated');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -266,7 +272,7 @@ const keepAliveDB = (con) => {
 
     try {
       const query = `SELECT * FROM post WHERE post.residency_id='${residency_id}'`;
-      const unformattedPosts = await promisifyQuery(connection, query);
+      const unformattedPosts = await promisifyQuery(db.connection, query);
       const now = moment();
 
       await Promise.all(
@@ -274,7 +280,7 @@ const keepAliveDB = (con) => {
           const { user_id, content, creation_date } = post;
           const elapsedTime = moment(creation_date).from(now);
 
-          const unformattedAuthor = await promisifyQuery(connection, `SELECT * FROM user WHERE user.id=${user_id}`);
+          const unformattedAuthor = await promisifyQuery(db.connection, `SELECT * FROM user WHERE user.id=${user_id}`);
           const { name, lastname } = unformattedAuthor[0];
           const author = `${name} ${lastname}`;
 
@@ -313,7 +319,7 @@ const keepAliveDB = (con) => {
     try {
       const query = `INSERT INTO post (residency_id, user_id, content, creation_date) VALUES (${residency_id}, ${user_id}, '${content}', '${creation_date}')`;
 
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Post published successfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -337,7 +343,7 @@ const keepAliveDB = (con) => {
     if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
 
     try {
-      const response = await promisifyQuery(connection, `SELECT * FROM property_type WHERE residency_id=${req.body.residency_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM property_type WHERE residency_id=${req.body.residency_id}`);
       const property_types = response.map(property_type => ({
         id: property_type.id,
         name: property_type.name,
@@ -359,7 +365,7 @@ const keepAliveDB = (con) => {
     try {
       const query = `INSERT INTO property_type (residency_id, name) VALUES (${residency_id}, '${name}')`;
 
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Property type saved succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -375,7 +381,7 @@ const keepAliveDB = (con) => {
 
     try {
       const query = `UPDATE property_type SET name='${name}' WHERE id=${id}`;
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Property type updated succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -390,7 +396,7 @@ const keepAliveDB = (con) => {
 
     try {
       const query = `DELETE FROM property_type WHERE id=${id}`;
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Property type removed succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -430,7 +436,7 @@ const keepAliveDB = (con) => {
          ('${admin_id}', '${name}', '${yardage}')
        `;
 
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Residency created succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -443,7 +449,7 @@ const keepAliveDB = (con) => {
 
     if (!id) return res.status(400).send('missing `id` parameter');
     try {
-      const response = await promisifyQuery(connection, `SELECT * FROM residency WHERE id = ${req.body.id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM residency WHERE id = ${req.body.id}`);
       const residency = response.map(_residency => ({
         id: _residency.id,
         admin_id: _residency.admin_id,
@@ -472,7 +478,7 @@ const keepAliveDB = (con) => {
 
     try {
       const query = `UPDATE residency SET admin_id = '${admin_id}', name = '${name}', yardage = '${yardage}' WHERE id = '${req.body.id}'`;
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Residency updated successfuly');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -488,7 +494,7 @@ const keepAliveDB = (con) => {
     }
 
     try {
-      const response = await promisifyQuery(connection, 'SELECT * FROM user');
+      const response = await promisifyQuery(db.connection, 'SELECT * FROM user');
       const residents = response.map(resident => ({
         id: resident.id,
         name: resident.name,
@@ -527,7 +533,7 @@ const keepAliveDB = (con) => {
       const query = `INSERT INTO expense (user_id, amount, concept, creation_date) VALUES
         ('${user_id}', '${amount}', '${concept}', '${creation_date}')`;
 
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Expense saved succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -541,7 +547,7 @@ const keepAliveDB = (con) => {
     if (!user_id) return res.status(400).send('missing `user_id` parameter');
 
     try {
-      const response = await promisifyQuery(connection, `SELECT * FROM expense WHERE user_id=${req.body.user_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${req.body.user_id}`);
       const expense = response.map(_expense => ({
         id: _expense.id,
         user_id: _expense.user_id,
@@ -573,7 +579,7 @@ const keepAliveDB = (con) => {
 
     try {
       const query = `UPDATE expense SET user_id = '${user_id}', amount = '${amount}', concept = '${concept}' WHERE id = '${req.body.id}'`;
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Expense updated successfuly');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -604,7 +610,7 @@ const keepAliveDB = (con) => {
       const query = `INSERT INTO service (, residency_id, price, name) VALUES
         ('${residency_id}', '${price}', '${name}')`;
 
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Service saved succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -620,7 +626,7 @@ const keepAliveDB = (con) => {
     }
 
     try {
-      const response = await promisifyQuery(connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
       const services = response.map(service => ({
         name: service.name,
         residency_id: service.residency_id,
@@ -652,7 +658,7 @@ const keepAliveDB = (con) => {
 
     try {
       const query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}' WHERE id = '${req.body.id}'`;
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Service updated successfuly');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -682,7 +688,7 @@ const keepAliveDB = (con) => {
       const query = `INSERT INTO expense (user_id, amount, concept, creation_date) VALUES
         ('${user_id}', '${amount}', '${concept}', '${creation_date}')`;
 
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Expense saved succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
@@ -696,7 +702,7 @@ const keepAliveDB = (con) => {
     if (!user_id) return res.status(400).send('missing `user_id` parameter');
 
     try {
-      const response = await promisifyQuery(connection, `SELECT * FROM expense WHERE user_id=${req.body.user_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${req.body.user_id}`);
       const expense = response.map(_expense => ({
         id: _expense.id,
         user_id: _expense.user_id,
@@ -728,7 +734,7 @@ const keepAliveDB = (con) => {
 
     try {
       const query = `UPDATE expense SET user_id = '${user_id}', amount = '${amount}', concept = '${concept}' WHERE id = '${req.body.id}'`;
-      await promisifyQuery(connection, query);
+      await promisifyQuery(db.connection, query);
       return res.status(200).send('Expense updated successfuly');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
