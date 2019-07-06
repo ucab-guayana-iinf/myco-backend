@@ -6,7 +6,7 @@
     "description": "Documentación oficial de la API REST de MyCo"
   },
   "host": "localhost:8001",
-  "basePath": "/",f
+  "basePath": "/",
   "tags": [
     {
       "name": "Residency",
