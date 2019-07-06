@@ -761,6 +761,134 @@
         }
       }
     },
+    "/residency/service":{
+      "post":{
+        "parameters":[
+          {
+            "name": "residency_id",
+            "in": "body",
+            "required": true,
+            "description":"id de la residencia a la que se presta el servicio",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          },
+          {
+            "name":"price",
+            "in": "body",
+            "required": true,
+            "description": "Precio del servicio prestado",
+            "type": "float",
+            "example":{
+              "amount": 3000
+            }
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "required": true,
+            "description": "Nombre del servicio prestado",
+            "type": "string",
+            "example":{
+              "concept": "Servicio de agua"
+            }
+          }
+        ],
+        "tags":[
+          "Services"
+        ],
+        "summary": "Crear un nuevo servicio de la residencia",
+        "responses":{
+          "200":{
+            "example":"Service saved succesfully"
+          }
+        }
+      },
+      "get":{
+        "parameters":[
+          {
+            "name": "residency_id",
+            "in": "body",
+            "required": true,
+            "description": "id de la residencia a la que se presta el servicio",
+            "type": "string",
+            "example":{
+              "user_id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          }
+        ],
+        "tags":[
+          "Services"
+        ],
+        "summary": "Obtener los servicios asociados a una residencia",
+        "responses":{
+          "200":{
+            "example":[
+              {
+                "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b",
+                "residency_id": "e1ac73f8-c39e-46bc-b047-6bbd523lkD667",
+                "amount": 3000,
+                "concept": "Servicio de luz"
+              }
+            ]
+          }
+        }
+      },
+      "put":{
+        "parameters":[
+          {
+            "name": "id",
+            "in": "body",
+            "required": true,
+            "description": "id del servicio que se modificara",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bb558fgh456"
+            }
+          },
+          {
+            "name": "residency_id",
+            "in": "body",
+            "required": true,
+            "description":"id de la residencia a la que se presta el servicio",
+            "type": "string",
+            "example":{
+              "id": "e1ac73f8-c39e-46bc-b047-6bbd523assd4b"
+            }
+          },
+          {
+            "name":"price",
+            "in": "body",
+            "required": true,
+            "description": "Precio del servicio",
+            "type": "float",
+            "example":{
+              "amount": 3000
+            }
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "required": true,
+            "description": "Nombre del servicio que se presta",
+            "type": "string",
+            "example":{
+              "concept": "Servicio de agua"
+            }
+          }
+        ],
+        "tags":[
+          "Services"
+        ],
+        "summary": "Actualizar un servicio de la residencia a partir de su id",
+        "responses":{
+          "200":{
+            "example": "Service updated succesfully"
+          }
+        }
+      }
+    },
     "/debts": {
       "put": {
         "parameters":[

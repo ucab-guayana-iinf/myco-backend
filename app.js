@@ -593,15 +593,14 @@ const keepAliveDB = (con) => {
 
 
     const {
-      id,
       residency_id,
       price,
       name,
     } = service;
 
     try {
-      const query = `INSERT INTO service (id, residency_id, price, name) VALUES
-        ('${id}', '${residency_id}', '${price}', '${name}')`;
+      const query = `INSERT INTO service (, residency_id, price, name) VALUES
+        ('${residency_id}', '${price}', '${name}')`;
 
       await promisifyQuery(connection, query);
       return res.status(200).send('Service saved succesfully');
