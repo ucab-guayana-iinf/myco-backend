@@ -26,9 +26,16 @@ const saltRounds = 10;
 const PORT = 5000;
 let connection;
 
+const keepAliveDB = (con) => {
+  setInterval(() => {
+    con.query('SELECT 1');
+  }, 120000);
+};
+
 (async () => {
   connection = await connect();
   handleDisconnect(connection);
+  keepAliveDB(connection);
 
   /* ------------------ EXPRESS CONFIG ------------------ */
 
