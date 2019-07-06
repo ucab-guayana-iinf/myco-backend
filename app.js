@@ -32,11 +32,12 @@ const keepAliveDB = ({ connection }) => {
   }, 120000);
 };
 
-const handleError = ({ connection }) => {
-  connection.on('error', async (error) => {
+const handleError = (_db) => {
+  _db.connection.on('error', async (error) => {
     console.log(`> Re-connecting lost MySQL connection: ${error}`);
 
-    connection = await connect(); // eslint-disable-line
+    _db.connection = await connect(); // eslint-disable-line
+    handleError(_db);
   });
 };
 
