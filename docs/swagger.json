@@ -322,7 +322,7 @@
         }
       }
     },
-    "/residency/residencies":{
+    "/residency/residency":{
       "get":{
         "parameters":[
           {
