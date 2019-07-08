@@ -51,8 +51,8 @@ const handleError = (_db) => {
   app.use((req, res, next) => {
     res.header('X-Powered-By', 'MyCo - UCAB');
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     next();
   });
   app.use(morgan('tiny'));
@@ -87,7 +87,7 @@ const handleError = (_db) => {
       `;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Register Success');
+      return res.status(200).send({ message: 'Register Success' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -114,7 +114,7 @@ const handleError = (_db) => {
 
       if (match) {
         const token = jwt.sign({ id: user.id, role: user.role }, apiSecret.secret);
-        res.status(200).json({ message: 'Login Success', token });
+        res.status(200).json({ message: 'Login Success', id: user.id, token });
       } else {
         res.status(400).send('Invalid credentials');
       }
@@ -173,7 +173,7 @@ const handleError = (_db) => {
       `;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Bill saved succesfully');
+      return res.status(200).send({ message: 'Bill saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -200,7 +200,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE bill SET property_id = '${property_id}', monthly_paymment = '${monthly_paymment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Bill updated successfuly');
+      return res.status(200).send({ message: 'Bill updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -255,7 +255,7 @@ const handleError = (_db) => {
 
     try {
       await promisifyQuery(db.connection, `UPDATE debt SET status='${status}' WHERE id=${id}`);
-      return res.status(200).send('Debt updated');
+      return res.status(200).send({ message: 'Debt updated' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -321,7 +321,7 @@ const handleError = (_db) => {
       const query = `INSERT INTO post (residency_id, user_id, content, creation_date) VALUES (${residency_id}, ${user_id}, '${content}', '${creation_date}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Post published successfully');
+      return res.status(200).send({ message: 'Post published successfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -367,7 +367,7 @@ const handleError = (_db) => {
       const query = `INSERT INTO property_type (residency_id, name) VALUES (${residency_id}, '${name}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Property type saved succesfully');
+      return res.status(200).send({ message: 'Property type saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -383,7 +383,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE property_type SET name='${name}' WHERE id=${id}`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Property type updated succesfully');
+      return res.status(200).send({ message: 'Property type updated succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -398,7 +398,7 @@ const handleError = (_db) => {
     try {
       const query = `DELETE FROM property_type WHERE id=${id}`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Property type removed succesfully');
+      return res.status(200).send({ message: 'Property type removed succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -438,7 +438,7 @@ const handleError = (_db) => {
        `;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Residency created succesfully');
+      return res.status(200).send({ message: 'Residency created succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -480,7 +480,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE residency SET admin_id = '${admin_id}', name = '${name}', yardage = '${yardage}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Residency updated successfuly');
+      return res.status(200).send({ message: 'Residency updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -535,7 +535,7 @@ const handleError = (_db) => {
         ('${user_id}', '${amount}', '${concept}', '${creation_date}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Expense saved succesfully');
+      return res.status(200).send({ message: 'Expense saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -581,7 +581,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE expense SET user_id = '${user_id}', amount = '${amount}', concept = '${concept}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Expense updated successfuly');
+      return res.status(200).send({ message: 'Expense updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -608,11 +608,11 @@ const handleError = (_db) => {
     } = service;
 
     try {
-      const query = `INSERT INTO service (, residency_id, price, name) VALUES
+      const query = `INSERT INTO service (residency_id, price, name) VALUES
         ('${residency_id}', '${price}', '${name}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Service saved succesfully');
+      return res.status(200).send({ message: 'Service saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -660,7 +660,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Service updated successfuly');
+      return res.status(200).send({ message: 'Service updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -690,7 +690,7 @@ const handleError = (_db) => {
         ('${user_id}', '${amount}', '${concept}', '${creation_date}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Expense saved succesfully');
+      return res.status(200).send({ message: 'Expense saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -736,7 +736,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE expense SET user_id = '${user_id}', amount = '${amount}', concept = '${concept}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Expense updated successfuly');
+      return res.status(200).send({ message: 'Expense updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
