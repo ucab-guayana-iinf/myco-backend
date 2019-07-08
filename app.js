@@ -110,14 +110,14 @@ const handleError = (_db) => {
       const response = await promisifyQuery(db.connection, query1);
       const user = response[0];
 
-      const match = bcrypt.compare(password, user.password);
-
-      if (match) {
-        const token = jwt.sign({ id: user.id, role: user.role }, apiSecret.secret);
-        res.status(200).json({ message: 'Login Success', id: user.id, token });
-      } else {
-        res.status(400).send('Invalid credentials');
-      }
+      bcrypt.compare(password, user.password, async (err, result) => {
+        if (result) {
+          const token = jwt.sign({ id: user.id, role: user.role }, apiSecret.secret);
+          res.status(200).json({ message: 'Login Success', id: user.id, token });
+        } else {
+          res.status(400).send('Invalid credentials');
+        }
+      });
     } catch (error) {
       res.status(409).send(`Conflict:\n${error}`);
     }
