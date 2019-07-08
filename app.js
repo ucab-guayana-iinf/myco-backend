@@ -127,12 +127,12 @@ const handleError = (_db) => {
 
   // GET
   app.get('/residency/bills', async (req, res) => {
-    const { property_id } = req.body;
+    const { property_id } = req.query;
 
     if (!property_id) return res.status(400).send('missing `property_id` parameter');
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM bill WHERE property_id = ${req.body.property_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM bill WHERE property_id = ${property_id}`);
       const bills = response.map(_bills => ({
         id: _bills.id,
         property_id: _bills.property_id,
@@ -214,7 +214,7 @@ const handleError = (_db) => {
 
     if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
 
-    const { residency_id } = req.body;
+    const { residency_id } = req.query;
     if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
 
     try {
@@ -232,7 +232,7 @@ const handleError = (_db) => {
 
     if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
 
-    const { property_id } = req.body;
+    const { property_id } = req.query;
     if (!property_id) return res.status(400).send('missing `property_id` parameter');
 
     try {
@@ -250,7 +250,7 @@ const handleError = (_db) => {
 
     if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
 
-    const { status, id } = req.body;
+    const { status, id } = req.query;
     if (!status) return res.status(400).send('missing `status` parameter');
 
     try {
@@ -265,7 +265,7 @@ const handleError = (_db) => {
 
   // GET
   app.get('/residency/feed', async (req, res) => {
-    const { residency_id } = req.body;
+    const { residency_id } = req.query;
 
     if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
 
@@ -339,12 +339,12 @@ const handleError = (_db) => {
 
   // GET
   app.get('/residency/property-types', async (req, res) => {
-    const { residency_id } = req.body;
+    const { residency_id } = req.query;
 
     if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM property_type WHERE residency_id=${req.body.residency_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM property_type WHERE residency_id=${residency_id}`);
       const property_types = response.map(property_type => ({
         id: property_type.id,
         name: property_type.name,
@@ -446,11 +446,11 @@ const handleError = (_db) => {
 
   // GET - residences
   app.get('/residency/residencies', async (req, res) => {
-    const { id } = req.body;
+    const { id } = req.query;
 
     if (!id) return res.status(400).send('missing `id` parameter');
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM residency WHERE id = ${req.body.id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM residency WHERE id = ${id}`);
       const residency = response.map(_residency => ({
         id: _residency.id,
         admin_id: _residency.admin_id,
@@ -543,12 +543,12 @@ const handleError = (_db) => {
 
   // GET
   app.get('/residency/expense', async (req, res) => {
-    const { user_id } = req.body;
+    const { user_id } = req.query;
 
     if (!user_id) return res.status(400).send('missing `user_id` parameter');
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${req.body.user_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${user_id}`);
       const expense = response.map(_expense => ({
         id: _expense.id,
         user_id: _expense.user_id,
@@ -627,7 +627,7 @@ const handleError = (_db) => {
     }
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM service WHERE residency_id = ${req.query.residency_id}`);
       const services = response.map(service => ({
         name: service.name,
         residency_id: service.residency_id,
@@ -703,7 +703,7 @@ const handleError = (_db) => {
     if (!user_id) return res.status(400).send('missing `user_id` parameter');
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${req.body.user_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${user_id}`);
       const expense = response.map(_expense => ({
         id: _expense.id,
         user_id: _expense.user_id,
