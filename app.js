@@ -444,8 +444,8 @@ const handleError = (_db) => {
     }
   });
 
-  // GET - residences
-  app.get('/residency/residencies', async (req, res) => {
+  // GET - one residency
+  app.get('/residency/residency', async (req, res) => {
     const { id } = req.query;
 
     if (!id) return res.status(400).send('missing `id` parameter');
@@ -459,6 +459,29 @@ const handleError = (_db) => {
       }));
 
       return res.status(200).send({ residency });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // GET - all residencies
+  app.get('/residency/residencies', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    try {
+      const response = await promisifyQuery(db.connection, 'SELECT * FROM residency');
+      const residency = response.map(_residency => ({
+        id: _residency.id,
+        admin_id: _residency.admin_id,
+        name: _residency.name,
+        yardage: _residency.yardage,
+      }));
+
+      return res.status(200).send({ amount: residency.length, residency });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
