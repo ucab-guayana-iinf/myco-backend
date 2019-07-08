@@ -470,7 +470,7 @@ const handleError = (_db) => {
 
     if (!admin_id) return res.status(400).send('missing `admin_id` parameter');
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM residency WHERE id = ${admin_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM residency WHERE admin_id = ${admin_id}`);
       const residency = response.map(_residency => ({
         id: _residency.id,
         admin_id: _residency.admin_id,
