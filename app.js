@@ -144,7 +144,7 @@ const handleError = (_db) => {
         last_update: _bills.last_update,
       }));
 
-      return res.status(200).send({ bills });
+      return res.status(200).json({ bills });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -220,7 +220,7 @@ const handleError = (_db) => {
     try {
       const debts = await promisifyQuery(db.connection, `SELECT * FROM debt WHERE residency_id=${residency_id}`);
 
-      return res.status(200).send({ debts, amount: debts.length });
+      return res.status(200).json({ debts, amount: debts.length });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -238,7 +238,7 @@ const handleError = (_db) => {
     try {
       const debts = await promisifyQuery(db.connection, `SELECT * FROM debt WHERE property_id=${property_id}`);
 
-      return res.status(200).send({ debts, amount: debts.length });
+      return res.status(200).json({ debts, amount: debts.length });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -293,7 +293,7 @@ const handleError = (_db) => {
         }),
       );
 
-      return res.status(200).send({ count: posts.length, posts });
+      return res.status(200).json({ count: posts.length, posts });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -328,13 +328,89 @@ const handleError = (_db) => {
   });
 
   /* --------------------- PROPERTY --------------------- */
+  // GET - returns all properties based on the residency id
+  app.get('/residency/properties', async (req, res) => {
+    const { residency_id } = req.query;
+    try {
+      const response = await promisifyQuery(db.connection, `SELECT * FROM property WHERE residency_id = ${residency_id}`);
+      const properties = response.map(_properties => ({
+        id: _properties.id,
+        residency_id: _properties.residency_id,
+        property_type_id: _properties.property_type_id,
+        user_id: _properties.user_id,
+        yardage: _properties.yardage,
+        departament_num: _properties.departament_num,
+      }));
 
-  // GET
+      return res.status(200).json({ properties });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
 
   // POST
 
+  app.post('/residency/properties', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const properties = await schema.validate(req.body, apiSchemas.residency.property)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const {
+      id,
+      residency_id,
+      property_type_id,
+      user_id,
+      yardage,
+      departament_num,
+    } = properties;
+
+    try {
+      const query = `INSERT INTO service (id, residency_id, property_type_id, user_id, yardage, departament_num) VALUES
+      ('${id}', '${residency_id}', '${property_type_id}', '${user_id}', '${yardage}', '${departament_num}')`;
+
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send('Property saved succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
   // PUT
 
+  app.put('/residency/properties', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const properties = await schema.validate(req.body, apiSchemas.residency.propertiy)
+      .catch(error => res.status(400).send(error));
+
+    const {
+      residency_id,
+      property_type_id,
+      user_id,
+      yardage,
+      departament_num,
+    } = properties;
+
+    try {
+      const query = `UPDATE property SET residency_id = '${residency_id}', property_type_id = '${property_type_id}', user_id = '${user_id}', yardage = '${yardage}', departament_num = '${departament_num}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send('Property updated successfuly');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
   /* ------------------- PROPERTY-TYPE ------------------- */
 
   // GET
@@ -350,7 +426,7 @@ const handleError = (_db) => {
         name: property_type.name,
       }));
 
-      return res.status(200).send({ property_types });
+      return res.status(200).json({ property_types });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -458,7 +534,7 @@ const handleError = (_db) => {
         yardage: _residency.yardage,
       }));
 
-      return res.status(200).send({ residency });
+      return res.status(200).json({ residency });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -478,7 +554,7 @@ const handleError = (_db) => {
         yardage: _residency.yardage,
       }));
 
-      return res.status(200).send({ amount: residency.length, residency });
+      return res.status(200).json({ amount: residency.length, residency });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -525,7 +601,7 @@ const handleError = (_db) => {
         social_number: resident.social_number,
       }));
 
-      return res.status(200).send({ amount: residents.length, residents });
+      return res.status(200).json({ amount: residents.length, residents });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -577,7 +653,7 @@ const handleError = (_db) => {
         creation_date: _expense.creation_date,
       }));
 
-      return res.status(200).send({ expense });
+      return res.status(200).json({ expense });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -654,7 +730,7 @@ const handleError = (_db) => {
         price: service.price,
       }));
 
-      return res.status(200).send(services);
+      return res.status(200).json({ services });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -732,7 +808,7 @@ const handleError = (_db) => {
         creation_date: _expense.creation_date,
       }));
 
-      return res.status(200).send({ expense });
+      return res.status(200).json({ expense });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
