@@ -704,7 +704,7 @@ const handleError = (_db) => {
       type,
     } = service;
 
-    if (type !== 0 || type !== 1) {
+    if (type !== 0 && type !== 1) {
       return res.status(409).send('Conflict: Wrong status entry');
     }
 
@@ -759,7 +759,7 @@ const handleError = (_db) => {
       type,
     } = service;
 
-    if (type !== 0 || type !== 1) {
+    if (type !== 0 && type !== 1) {
       return res.status(409).send('Conflict: Wrong status entry');
     }
 
