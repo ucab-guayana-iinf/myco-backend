@@ -4,7 +4,8 @@ const Service = {
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     residency_id INT NOT NULL,
     price FLOAT(14, 2),
-    name VARCHAR(400)
+    name VARCHAR(400),
+    type INT NOT NULL
   `,
 };
 

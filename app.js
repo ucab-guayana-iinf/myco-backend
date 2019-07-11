@@ -373,7 +373,7 @@ const handleError = (_db) => {
     } = properties;
 
     try {
-      const query = `INSERT INTO service (id, residency_id, property_type_id, user_id, yardage, departament_num) VALUES
+      const query = `INSERT INTO property (id, residency_id, property_type_id, user_id, yardage, departament_num) VALUES
       ('${id}', '${residency_id}', '${property_type_id}', '${user_id}', '${yardage}', '${departament_num}')`;
 
       await promisifyQuery(db.connection, query);
@@ -701,11 +701,16 @@ const handleError = (_db) => {
       residency_id,
       price,
       name,
+      type,
     } = service;
 
+    if (type !== 0 || type !== 1) {
+      return res.status(409).send('Conflict: Wrong status entry');
+    }
+
     try {
-      const query = `INSERT INTO service (residency_id, price, name) VALUES
-        ('${residency_id}', '${price}', '${name}')`;
+      const query = `INSERT INTO service (residency_id, price, name, type) VALUES
+        ('${residency_id}', '${price}', '${name}', '${type}')`;
 
       await promisifyQuery(db.connection, query);
       return res.status(200).send({ message: 'Service saved succesfully' });
@@ -728,6 +733,7 @@ const handleError = (_db) => {
         name: service.name,
         residency_id: service.residency_id,
         price: service.price,
+        type: service.type,
       }));
 
       return res.status(200).json({ services });
@@ -746,15 +752,19 @@ const handleError = (_db) => {
     const service = await schema.validate(req.body, apiSchemas.residency.service)
       .catch(error => res.status(400).send(error));
 
-
     const {
       residency_id,
       price,
       name,
+      type,
     } = service;
 
+    if (type !== 0 || type !== 1) {
+      return res.status(409).send('Conflict: Wrong status entry');
+    }
+
     try {
-      const query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}' WHERE id = '${req.body.id}'`;
+      const query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}', type = '${type}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
       return res.status(200).send({ message: 'Service updated successfuly' });
     } catch (error) {
