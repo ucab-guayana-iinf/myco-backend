@@ -3,7 +3,8 @@ const Property = {
   fields: `
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     residency_id INT NOT NULL,
-    user_id INT NOT NULL,
+    property_type_id INT NOT NULL,
+    user_id VARCHAR(100) NOT NULL,
     yardage FLOAT(10, 2) NOT NULL,
     department_num VARCHAR(100) NOT NULL
   `,
