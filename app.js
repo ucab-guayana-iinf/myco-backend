@@ -261,6 +261,39 @@ const handleError = (_db) => {
     }
   });
 
+  // POST
+  app.post('/residency/debts', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const properties = await schema.validate(req.body, apiSchemas.residency.debts)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const {
+      residency_id,
+      property_id,
+      amount,
+      description,
+      status,
+      date = new Date(),
+    } = properties;
+
+    try {
+      const query = `INSERT INTO debt (residency_id, property_id, amount, description, status, creation_date, last_update) VALUES
+      ('${residency_id}', '${property_id}', '${amount}', '${description}', '${status}', '${date}', '${date}')`;
+
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send('Property saved succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
   /* ----------------------- POST ----------------------- */
 
   // GET
