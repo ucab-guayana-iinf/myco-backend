@@ -339,7 +339,7 @@ const handleError = (_db) => {
         property_type_id: _properties.property_type_id,
         user_id: _properties.user_id,
         yardage: _properties.yardage,
-        departament_num: _properties.departament_num,
+        department_num: _properties.department_num,
       }));
 
       return res.status(200).json({ properties });
@@ -369,12 +369,12 @@ const handleError = (_db) => {
       property_type_id,
       user_id,
       yardage,
-      departament_num,
+      department_num,
     } = properties;
 
     try {
-      const query = `INSERT INTO property (id, residency_id, property_type_id, user_id, yardage, departament_num) VALUES
-      ('${id}', '${residency_id}', '${property_type_id}', '${user_id}', '${yardage}', '${departament_num}')`;
+      const query = `INSERT INTO property (id, residency_id, property_type_id, user_id, yardage, department_num) VALUES
+      ('${id}', '${residency_id}', '${property_type_id}', '${user_id}', '${yardage}', '${department_num}')`;
 
       await promisifyQuery(db.connection, query);
       return res.status(200).send('Property saved succesfully');
@@ -400,11 +400,11 @@ const handleError = (_db) => {
       property_type_id,
       user_id,
       yardage,
-      departament_num,
+      department_num,
     } = properties;
 
     try {
-      const query = `UPDATE property SET residency_id = '${residency_id}', property_type_id = '${property_type_id}', user_id = '${user_id}', yardage = '${yardage}', departament_num = '${departament_num}' WHERE id = '${req.body.id}'`;
+      const query = `UPDATE property SET residency_id = '${residency_id}', property_type_id = '${property_type_id}', user_id = '${user_id}', yardage = '${yardage}', department_num = '${department_num}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
       return res.status(200).send('Property updated successfuly');
     } catch (error) {
@@ -480,7 +480,7 @@ const handleError = (_db) => {
     }
   });
 
-  /* --------------------- SERVICE --------------------- */
+  /* --------------------- PAYMENTS --------------------- */
 
   // GET
 
