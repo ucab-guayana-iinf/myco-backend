@@ -6,5 +6,5 @@ module.exports = schema({
   property_type_id: { type: String, required: true },
   user_id: { type: String, required: true },
   yardage: { type: Float32Array, required: true },
-  departament_num: { type: String, required: true },
+  department_num: { type: String, required: true },
 });
