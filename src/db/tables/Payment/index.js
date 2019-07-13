@@ -5,8 +5,9 @@ const Payment = {
     bill_id INT NOT NULL,
     user_id INT NOT NULL,
     creation_date VARCHAR(256),
-    ammount FLOAT(10, 2) NOT NULL,
-    description VARCHAR(256) NOT NULL
+    amount FLOAT(10, 2) NOT NULL,
+    description VARCHAR(256) NOT NULL,
+    confirmation INT NOT NULL
 `,
 };
 

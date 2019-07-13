@@ -3,7 +3,7 @@ const Bill = {
   fields: `
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     property_id INT NOT NULL,
-    monthly_paymment FLOAT(10, 2) NOT NULL,
+    monthly_payment FLOAT(10, 2) NOT NULL,
     debt FLOAT(10, 2) NOT NULL,
     special_fee FLOAT(10, 2) NOT NULL,
     other FLOAT(10, 2) NOT NULL,

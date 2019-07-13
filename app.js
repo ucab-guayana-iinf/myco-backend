@@ -136,7 +136,7 @@ const handleError = (_db) => {
       const bills = response.map(_bills => ({
         id: _bills.id,
         property_id: _bills.property_id,
-        monthly_paymment: _bills.monthly_paymment,
+        monthly_payment: _bills.monthly_payment,
         debt: _bills.debt,
         special_fee: _bills.special_fee,
         other: _bills.other,
@@ -157,7 +157,7 @@ const handleError = (_db) => {
 
     const {
       property_id,
-      monthly_paymment,
+      monthly_payment,
       debt,
       special_fee,
       other,
@@ -167,9 +167,9 @@ const handleError = (_db) => {
     try {
       const query = `
       INSERT INTO bill
-        (property_id, monthly_paymment, debt, special_fee, other, creation_date, last_update)
+        (property_id, monthly_payment, debt, special_fee, other, creation_date, last_update)
       VALUES
-        ('${property_id}', '${monthly_paymment}', '${debt}', '${special_fee}', '${other}', '${date}', '${date}')
+        ('${property_id}', '${monthly_payment}', '${debt}', '${special_fee}', '${other}', '${date}', '${date}')
       `;
 
       await promisifyQuery(db.connection, query);
@@ -190,7 +190,7 @@ const handleError = (_db) => {
 
     const {
       property_id,
-      monthly_paymment,
+      monthly_payment,
       debt,
       special_fee,
       other,
@@ -198,7 +198,7 @@ const handleError = (_db) => {
     } = bill;
 
     try {
-      const query = `UPDATE bill SET property_id = '${property_id}', monthly_paymment = '${monthly_paymment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
+      const query = `UPDATE bill SET property_id = '${property_id}', monthly_payment = '${monthly_payment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
       return res.status(200).send({ message: 'Bill updated successfuly' });
     } catch (error) {
@@ -483,10 +483,115 @@ const handleError = (_db) => {
   /* --------------------- PAYMENTS --------------------- */
 
   // GET
+  app.get('/residency/payments', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+    try {
+      const response = await promisifyQuery(db.connection, 'SELECT * FROM payment');
+      const payments = response.map(_payments => ({
+        id: _payments.id,
+        bill_id: _payments.bill_id,
+        user_id: _payments.user_id,
+        creation_date: _payments.creation_date,
+        amount: _payments.amount,
+        description: _payments.description,
+        confirmation: _payments.confirmation,
+      }));
+
+      return res.status(200).json({ payments });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
   // POST
+  app.post('/residency/payments', async (req, res) => {
+    const payment = await schema.validate(req.body, apiSchemas.residency.payment)
+      .catch(error => res.status(400).send(error));
 
-  // PUT
+    const {
+      bill_id,
+      user_id,
+      amount,
+      description,
+      date = new Date(),
+      confirmation = 0,
+    } = payment;
+
+    try {
+      const query = `
+      INSERT INTO payment
+        (bill_id, user_id, amount, description, creation_date, confirmation)
+      VALUES
+        ('${bill_id}', '${user_id}', '${amount}', '${description}', '${date}', '${confirmation}')
+      `;
+
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send({ message: 'Payment saved succesfully' });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // PUT - Update payment details if the payment still not confirmed or negated
+  app.put('/residency/payments', async (req, res) => {
+    const { id } = req.body;
+
+    if (!id) return res.status(400).send('missing `id` parameter');
+
+    const payment = await schema.validate(req.body, apiSchemas.residency.bill)
+      .catch(error => res.status(400).send(error));
+
+    const {
+      bill_id,
+      user_id,
+      amount,
+      description,
+      confirmation,
+    } = payment;
+
+    if (confirmation !== 0) {
+      if (!id) return res.status(403).send('Forbidden');
+    }
+
+    try {
+      const query = `UPDATE payment SET bill_id = '${bill_id}', user_id = '${user_id}', amount = '${amount}', description = '${description}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send({ message: 'Payment updated successfuly' });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // PUT - Update Confirmation
+  app.put('/residency/confirm-payment', async (req, res) => {
+    const { id } = req.body;
+
+    if (!id) return res.status(400).send('missing `id` parameter');
+
+    const payment = await schema.validate(req.body, apiSchemas.residency.bill)
+      .catch(error => res.status(400).send(error));
+
+    const {
+      confirmation,
+    } = payment;
+
+    if (confirmation !== 0 && confirmation !== 1 && confirmation !== -1) {
+      if (!id) return res.status(403).send('Conflict: Invalid input');
+    }
+
+    try {
+      const query = `UPDATE payment SET confirmation = '${confirmation}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send({ message: 'Payment confirmation updated successfuly' });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
 
   /* --------------------- RESIDENCY --------------------- */
 
