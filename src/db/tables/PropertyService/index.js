@@ -5,7 +5,7 @@ const PropertyService = {
     service_id INT NOT NULL,
     property_id INT NOT NULL,
     creation_date VARCHAR(256),
-    yardage FLOAT(10, 2) NOT NULL,
+    yardage FLOAT(10, 2) NOT NULL
   `,
 };
 
