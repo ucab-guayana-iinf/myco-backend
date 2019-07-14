@@ -288,7 +288,7 @@ const handleError = (_db) => {
       ('${residency_id}', '${property_id}', '${amount}', '${description}', '${status}', '${date}', '${date}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Property saved succesfully');
+      return res.status(200).send('Debt saved succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -457,6 +457,7 @@ const handleError = (_db) => {
       const property_types = response.map(property_type => ({
         id: property_type.id,
         name: property_type.name,
+        yardage: property_type.yardage,
       }));
 
       return res.status(200).json({ property_types });
@@ -470,10 +471,10 @@ const handleError = (_db) => {
     const propertyType = await schema.validate(req.body, apiSchemas.property.propertyType)
       .catch(error => res.status(400).send(error));
 
-    const { residency_id, name } = propertyType;
+    const { residency_id, name, yardage } = propertyType;
 
     try {
-      const query = `INSERT INTO property_type (residency_id, name) VALUES (${residency_id}, '${name}')`;
+      const query = `INSERT INTO property_type (residency_id, name, yardage) VALUES (${residency_id}, '${name}', '${yardage}')`;
 
       await promisifyQuery(db.connection, query);
       return res.status(200).send({ message: 'Property type saved succesfully' });
@@ -484,13 +485,20 @@ const handleError = (_db) => {
 
   // PUT
   app.put('/residency/property-types', async (req, res) => {
-    const { id, name } = req.body;
+    const { id } = req.body;
 
     if (!id) return res.status(400).send('missing `id` parameter');
-    if (!name) return res.status(400).send('missing `name` parameter');
+
+    const property_type = await schema.validate(req.body, apiSchemas.property.propertyType)
+      .catch(error => res.status(400).send(error));
+
+    const {
+      name,
+      yardage,
+    } = property_type;
 
     try {
-      const query = `UPDATE property_type SET name='${name}' WHERE id=${id}`;
+      const query = `UPDATE property_type SET name ='${name}', yardage ='${yardage}' WHERE id=${id}`;
       await promisifyQuery(db.connection, query);
       return res.status(200).send({ message: 'Property type updated succesfully' });
     } catch (error) {
