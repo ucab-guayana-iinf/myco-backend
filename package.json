@@ -24,16 +24,17 @@
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
-    "body-parser": "^1.18.3",
+    "body-parser": "^1.19.0",
     "dotenv": "^7.0.0",
-    "express": "^4.16.4",
+    "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.24.0",
     "morgan": "^1.9.1",
     "mysql": "^2.16.0",
     "nodemon": "^1.19.1",
+    "path": "^0.12.7",
     "schm": "^0.4.1",
-    "swagger-ui-express": "^4.0.2"
+    "swagger-ui-express": "^4.0.7"
   },
   "devDependencies": {
     "chalk": "^2.4.2",

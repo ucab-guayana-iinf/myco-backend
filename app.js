@@ -51,8 +51,8 @@ const handleError = (_db) => {
   app.use((req, res, next) => {
     res.header('X-Powered-By', 'MyCo - UCAB');
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     next();
   });
   app.use(morgan('tiny'));
@@ -87,7 +87,7 @@ const handleError = (_db) => {
       `;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Register Success');
+      return res.status(200).send({ message: 'Register Success' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -110,14 +110,14 @@ const handleError = (_db) => {
       const response = await promisifyQuery(db.connection, query1);
       const user = response[0];
 
-      const match = bcrypt.compare(password, user.password);
-
-      if (match) {
-        const token = jwt.sign({ id: user.id, role: user.role }, apiSecret.secret);
-        res.status(200).json({ message: 'Login Success', token });
-      } else {
-        res.status(400).send('Invalid credentials');
-      }
+      bcrypt.compare(password, user.password, async (err, result) => {
+        if (result) {
+          const token = jwt.sign({ id: user.id, role: user.role }, apiSecret.secret);
+          res.status(200).json({ message: 'Login Success', id: user.id, token });
+        } else {
+          res.status(400).send('Invalid credentials');
+        }
+      });
     } catch (error) {
       res.status(409).send(`Conflict:\n${error}`);
     }
@@ -127,16 +127,16 @@ const handleError = (_db) => {
 
   // GET
   app.get('/residency/bills', async (req, res) => {
-    const { property_id } = req.body;
+    const { property_id } = req.query;
 
     if (!property_id) return res.status(400).send('missing `property_id` parameter');
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM bill WHERE property_id = ${req.body.property_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM bill WHERE property_id = ${property_id}`);
       const bills = response.map(_bills => ({
         id: _bills.id,
         property_id: _bills.property_id,
-        monthly_paymment: _bills.monthly_paymment,
+        monthly_payment: _bills.monthly_payment,
         debt: _bills.debt,
         special_fee: _bills.special_fee,
         other: _bills.other,
@@ -144,7 +144,7 @@ const handleError = (_db) => {
         last_update: _bills.last_update,
       }));
 
-      return res.status(200).send({ bills });
+      return res.status(200).json({ bills });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -157,7 +157,7 @@ const handleError = (_db) => {
 
     const {
       property_id,
-      monthly_paymment,
+      monthly_payment,
       debt,
       special_fee,
       other,
@@ -167,13 +167,13 @@ const handleError = (_db) => {
     try {
       const query = `
       INSERT INTO bill
-        (property_id, monthly_paymment, debt, special_fee, other, creation_date, last_update)
+        (property_id, monthly_payment, debt, special_fee, other, creation_date, last_update)
       VALUES
-        ('${property_id}', '${monthly_paymment}', '${debt}', '${special_fee}', '${other}', '${date}', '${date}')
+        ('${property_id}', '${monthly_payment}', '${debt}', '${special_fee}', '${other}', '${date}', '${date}')
       `;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Bill saved succesfully');
+      return res.status(200).send({ message: 'Bill saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -190,7 +190,7 @@ const handleError = (_db) => {
 
     const {
       property_id,
-      monthly_paymment,
+      monthly_payment,
       debt,
       special_fee,
       other,
@@ -198,9 +198,9 @@ const handleError = (_db) => {
     } = bill;
 
     try {
-      const query = `UPDATE bill SET property_id = '${property_id}', monthly_paymment = '${monthly_paymment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
+      const query = `UPDATE bill SET property_id = '${property_id}', monthly_payment = '${monthly_payment}', debt = '${debt}', special_fee = '${special_fee}', other = '${other}', last_update = '${date}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Bill updated successfuly');
+      return res.status(200).send({ message: 'Bill updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -214,13 +214,13 @@ const handleError = (_db) => {
 
     if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
 
-    const { residency_id } = req.body;
+    const { residency_id } = req.query;
     if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
 
     try {
       const debts = await promisifyQuery(db.connection, `SELECT * FROM debt WHERE residency_id=${residency_id}`);
 
-      return res.status(200).send({ debts, amount: debts.length });
+      return res.status(200).json({ debts, amount: debts.length });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -232,13 +232,13 @@ const handleError = (_db) => {
 
     if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
 
-    const { property_id } = req.body;
+    const { property_id } = req.query;
     if (!property_id) return res.status(400).send('missing `property_id` parameter');
 
     try {
       const debts = await promisifyQuery(db.connection, `SELECT * FROM debt WHERE property_id=${property_id}`);
 
-      return res.status(200).send({ debts, amount: debts.length });
+      return res.status(200).json({ debts, amount: debts.length });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -250,12 +250,45 @@ const handleError = (_db) => {
 
     if (user.role !== 'ADMIN') return res.status(403).send('Forbidden');
 
-    const { status, id } = req.body;
+    const { status, id } = req.query;
     if (!status) return res.status(400).send('missing `status` parameter');
 
     try {
       await promisifyQuery(db.connection, `UPDATE debt SET status='${status}' WHERE id=${id}`);
-      return res.status(200).send('Debt updated');
+      return res.status(200).send({ message: 'Debt updated' });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // POST
+  app.post('/residency/debts', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const properties = await schema.validate(req.body, apiSchemas.residency.debts)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const {
+      residency_id,
+      property_id,
+      amount,
+      description,
+      status,
+      date = new Date(),
+    } = properties;
+
+    try {
+      const query = `INSERT INTO debt (residency_id, property_id, amount, description, status, creation_date, last_update) VALUES
+      ('${residency_id}', '${property_id}', '${amount}', '${description}', '${status}', '${date}', '${date}')`;
+
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send('Debt saved succesfully');
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -265,7 +298,7 @@ const handleError = (_db) => {
 
   // GET
   app.get('/residency/feed', async (req, res) => {
-    const { residency_id } = req.body;
+    const { residency_id } = req.query;
 
     if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
 
@@ -293,7 +326,7 @@ const handleError = (_db) => {
         }),
       );
 
-      return res.status(200).send({ count: posts.length, posts });
+      return res.status(200).json({ count: posts.length, posts });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -321,36 +354,113 @@ const handleError = (_db) => {
       const query = `INSERT INTO post (residency_id, user_id, content, creation_date) VALUES (${residency_id}, ${user_id}, '${content}', '${creation_date}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Post published successfully');
+      return res.status(200).send({ message: 'Post published successfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
 
   /* --------------------- PROPERTY --------------------- */
+  // GET - returns all properties based on the residency id
+  app.get('/residency/properties', async (req, res) => {
+    const { residency_id } = req.query;
+    try {
+      const response = await promisifyQuery(db.connection, `SELECT * FROM property WHERE residency_id = ${residency_id}`);
+      const properties = response.map(_properties => ({
+        id: _properties.id,
+        residency_id: _properties.residency_id,
+        property_type_id: _properties.property_type_id,
+        user_id: _properties.user_id,
+        yardage: _properties.yardage,
+        department_num: _properties.department_num,
+      }));
 
-  // GET
+      return res.status(200).json({ properties });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
 
   // POST
 
+  app.post('/residency/properties', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const properties = await schema.validate(req.body, apiSchemas.residency.property)
+      .catch((error) => {
+        res.status(400).send(error);
+      });
+
+    const {
+      id,
+      residency_id,
+      property_type_id,
+      user_id,
+      yardage,
+      department_num,
+    } = properties;
+
+    try {
+      const query = `INSERT INTO property (id, residency_id, property_type_id, user_id, yardage, department_num) VALUES
+      ('${id}', '${residency_id}', '${property_type_id}', '${user_id}', '${yardage}', '${department_num}')`;
+
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send('Property saved succesfully');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
   // PUT
 
+  app.put('/residency/properties', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+
+    const properties = await schema.validate(req.body, apiSchemas.residency.propertiy)
+      .catch(error => res.status(400).send(error));
+
+    const {
+      residency_id,
+      property_type_id,
+      user_id,
+      yardage,
+      department_num,
+    } = properties;
+
+    try {
+      const query = `UPDATE property SET residency_id = '${residency_id}', property_type_id = '${property_type_id}', user_id = '${user_id}', yardage = '${yardage}', department_num = '${department_num}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send('Property updated successfuly');
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
   /* ------------------- PROPERTY-TYPE ------------------- */
 
   // GET
   app.get('/residency/property-types', async (req, res) => {
-    const { residency_id } = req.body;
+    const { residency_id } = req.query;
 
     if (!residency_id) return res.status(400).send('missing `residency_id` parameter');
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM property_type WHERE residency_id=${req.body.residency_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM property_type WHERE residency_id=${residency_id}`);
       const property_types = response.map(property_type => ({
         id: property_type.id,
         name: property_type.name,
+        yardage: property_type.yardage,
       }));
 
-      return res.status(200).send({ property_types });
+      return res.status(200).json({ property_types });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -361,13 +471,13 @@ const handleError = (_db) => {
     const propertyType = await schema.validate(req.body, apiSchemas.property.propertyType)
       .catch(error => res.status(400).send(error));
 
-    const { residency_id, name } = propertyType;
+    const { residency_id, name, yardage } = propertyType;
 
     try {
-      const query = `INSERT INTO property_type (residency_id, name) VALUES (${residency_id}, '${name}')`;
+      const query = `INSERT INTO property_type (residency_id, name, yardage) VALUES (${residency_id}, '${name}', '${yardage}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Property type saved succesfully');
+      return res.status(200).send({ message: 'Property type saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -375,15 +485,22 @@ const handleError = (_db) => {
 
   // PUT
   app.put('/residency/property-types', async (req, res) => {
-    const { id, name } = req.body;
+    const { id } = req.body;
 
     if (!id) return res.status(400).send('missing `id` parameter');
-    if (!name) return res.status(400).send('missing `name` parameter');
+
+    const property_type = await schema.validate(req.body, apiSchemas.property.propertyType)
+      .catch(error => res.status(400).send(error));
+
+    const {
+      name,
+      yardage,
+    } = property_type;
 
     try {
-      const query = `UPDATE property_type SET name='${name}' WHERE id=${id}`;
+      const query = `UPDATE property_type SET name ='${name}', yardage ='${yardage}' WHERE id=${id}`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Property type updated succesfully');
+      return res.status(200).send({ message: 'Property type updated succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -398,19 +515,124 @@ const handleError = (_db) => {
     try {
       const query = `DELETE FROM property_type WHERE id=${id}`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Property type removed succesfully');
+      return res.status(200).send({ message: 'Property type removed succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
 
-  /* --------------------- SERVICE --------------------- */
+  /* --------------------- PAYMENTS --------------------- */
 
   // GET
+  app.get('/residency/payments', async (req, res) => {
+    const user = utils.verifyToken(res, req.headers);
+
+    if (user.role !== 'ADMIN') {
+      return res.status(403).send('Forbidden');
+    }
+    try {
+      const response = await promisifyQuery(db.connection, 'SELECT * FROM payment');
+      const payments = response.map(_payments => ({
+        id: _payments.id,
+        bill_id: _payments.bill_id,
+        user_id: _payments.user_id,
+        creation_date: _payments.creation_date,
+        amount: _payments.amount,
+        description: _payments.description,
+        confirmation: _payments.confirmation,
+      }));
+
+      return res.status(200).json({ payments });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
 
   // POST
+  app.post('/residency/payments', async (req, res) => {
+    const payment = await schema.validate(req.body, apiSchemas.residency.payment)
+      .catch(error => res.status(400).send(error));
 
-  // PUT
+    const {
+      bill_id,
+      user_id,
+      amount,
+      description,
+      date = new Date(),
+      confirmation = 0,
+    } = payment;
+
+    try {
+      const query = `
+      INSERT INTO payment
+        (bill_id, user_id, amount, description, creation_date, confirmation)
+      VALUES
+        ('${bill_id}', '${user_id}', '${amount}', '${description}', '${date}', '${confirmation}')
+      `;
+
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send({ message: 'Payment saved succesfully' });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // PUT - Update payment details if the payment still not confirmed or negated
+  app.put('/residency/payments', async (req, res) => {
+    const { id } = req.body;
+
+    if (!id) return res.status(400).send('missing `id` parameter');
+
+    const payment = await schema.validate(req.body, apiSchemas.residency.bill)
+      .catch(error => res.status(400).send(error));
+
+    const {
+      bill_id,
+      user_id,
+      amount,
+      description,
+      confirmation,
+    } = payment;
+
+    if (confirmation !== 0) {
+      if (!id) return res.status(403).send('Forbidden');
+    }
+
+    try {
+      const query = `UPDATE payment SET bill_id = '${bill_id}', user_id = '${user_id}', amount = '${amount}', description = '${description}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send({ message: 'Payment updated successfuly' });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // PUT - Update Confirmation
+  app.put('/residency/confirm-payment', async (req, res) => {
+    const { id } = req.body;
+
+    if (!id) return res.status(400).send('missing `id` parameter');
+
+    const payment = await schema.validate(req.body, apiSchemas.residency.bill)
+      .catch(error => res.status(400).send(error));
+
+    const {
+      confirmation,
+    } = payment;
+
+    if (confirmation !== 0 && confirmation !== 1 && confirmation !== -1) {
+      if (!id) return res.status(403).send('Conflict: Invalid input');
+    }
+
+    try {
+      const query = `UPDATE payment SET confirmation = '${confirmation}' WHERE id = '${req.body.id}'`;
+      await promisifyQuery(db.connection, query);
+      return res.status(200).send({ message: 'Payment confirmation updated successfuly' });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
 
   /* --------------------- RESIDENCY --------------------- */
 
@@ -438,19 +660,19 @@ const handleError = (_db) => {
        `;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Residency created succesfully');
+      return res.status(200).send({ message: 'Residency created succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
   });
 
-  // GET - residences
-  app.get('/residency/residencies', async (req, res) => {
-    const { id } = req.body;
+  // GET - one residency
+  app.get('/residency/residency', async (req, res) => {
+    const { id } = req.query;
 
     if (!id) return res.status(400).send('missing `id` parameter');
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM residency WHERE id = ${req.body.id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM residency WHERE id = ${id}`);
       const residency = response.map(_residency => ({
         id: _residency.id,
         admin_id: _residency.admin_id,
@@ -458,7 +680,27 @@ const handleError = (_db) => {
         yardage: _residency.yardage,
       }));
 
-      return res.status(200).send({ residency });
+      return res.status(200).json({ residency });
+    } catch (error) {
+      return res.status(409).send(`Conflict:\n${error}`);
+    }
+  });
+
+  // GET - all residencies
+  app.get('/residency/residencies', async (req, res) => {
+    const { admin_id } = req.query;
+
+    if (!admin_id) return res.status(400).send('missing `admin_id` parameter');
+    try {
+      const response = await promisifyQuery(db.connection, `SELECT * FROM residency WHERE admin_id = ${admin_id}`);
+      const residency = response.map(_residency => ({
+        id: _residency.id,
+        admin_id: _residency.admin_id,
+        name: _residency.name,
+        yardage: _residency.yardage,
+      }));
+
+      return res.status(200).json({ amount: residency.length, residency });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -480,7 +722,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE residency SET admin_id = '${admin_id}', name = '${name}', yardage = '${yardage}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Residency updated successfuly');
+      return res.status(200).send({ message: 'Residency updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -505,7 +747,7 @@ const handleError = (_db) => {
         social_number: resident.social_number,
       }));
 
-      return res.status(200).send({ amount: residents.length, residents });
+      return res.status(200).json({ amount: residents.length, residents });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -535,7 +777,7 @@ const handleError = (_db) => {
         ('${user_id}', '${amount}', '${concept}', '${creation_date}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Expense saved succesfully');
+      return res.status(200).send({ message: 'Expense saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -543,12 +785,12 @@ const handleError = (_db) => {
 
   // GET
   app.get('/residency/expense', async (req, res) => {
-    const { user_id } = req.body;
+    const { user_id } = req.query;
 
     if (!user_id) return res.status(400).send('missing `user_id` parameter');
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${req.body.user_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${user_id}`);
       const expense = response.map(_expense => ({
         id: _expense.id,
         user_id: _expense.user_id,
@@ -557,7 +799,7 @@ const handleError = (_db) => {
         creation_date: _expense.creation_date,
       }));
 
-      return res.status(200).send({ expense });
+      return res.status(200).json({ expense });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -581,7 +823,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE expense SET user_id = '${user_id}', amount = '${amount}', concept = '${concept}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Expense updated successfuly');
+      return res.status(200).send({ message: 'Expense updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -605,14 +847,19 @@ const handleError = (_db) => {
       residency_id,
       price,
       name,
+      type,
     } = service;
 
+    if (type !== 0 && type !== 1) {
+      return res.status(409).send('Conflict: Wrong status entry');
+    }
+
     try {
-      const query = `INSERT INTO service (, residency_id, price, name) VALUES
-        ('${residency_id}', '${price}', '${name}')`;
+      const query = `INSERT INTO service (residency_id, price, name, type) VALUES
+        ('${residency_id}', '${price}', '${name}', '${type}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Service saved succesfully');
+      return res.status(200).send({ message: 'Service saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -627,14 +874,15 @@ const handleError = (_db) => {
     }
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM service WHERE residency_id = ${req.body.residency_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM service WHERE residency_id = ${req.query.residency_id}`);
       const services = response.map(service => ({
         name: service.name,
         residency_id: service.residency_id,
         price: service.price,
+        type: service.type,
       }));
 
-      return res.status(200).send(services);
+      return res.status(200).json({ services });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -650,17 +898,21 @@ const handleError = (_db) => {
     const service = await schema.validate(req.body, apiSchemas.residency.service)
       .catch(error => res.status(400).send(error));
 
-
     const {
       residency_id,
       price,
       name,
+      type,
     } = service;
 
+    if (type !== 0 && type !== 1) {
+      return res.status(409).send('Conflict: Wrong status entry');
+    }
+
     try {
-      const query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}' WHERE id = '${req.body.id}'`;
+      const query = `UPDATE service SET residency_id = '${residency_id}', price = '${price}', name = '${name}', type = '${type}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Service updated successfuly');
+      return res.status(200).send({ message: 'Service updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -690,7 +942,7 @@ const handleError = (_db) => {
         ('${user_id}', '${amount}', '${concept}', '${creation_date}')`;
 
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Expense saved succesfully');
+      return res.status(200).send({ message: 'Expense saved succesfully' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -703,7 +955,7 @@ const handleError = (_db) => {
     if (!user_id) return res.status(400).send('missing `user_id` parameter');
 
     try {
-      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${req.body.user_id}`);
+      const response = await promisifyQuery(db.connection, `SELECT * FROM expense WHERE user_id=${user_id}`);
       const expense = response.map(_expense => ({
         id: _expense.id,
         user_id: _expense.user_id,
@@ -712,7 +964,7 @@ const handleError = (_db) => {
         creation_date: _expense.creation_date,
       }));
 
-      return res.status(200).send({ expense });
+      return res.status(200).json({ expense });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
@@ -736,7 +988,7 @@ const handleError = (_db) => {
     try {
       const query = `UPDATE expense SET user_id = '${user_id}', amount = '${amount}', concept = '${concept}' WHERE id = '${req.body.id}'`;
       await promisifyQuery(db.connection, query);
-      return res.status(200).send('Expense updated successfuly');
+      return res.status(200).send({ message: 'Expense updated successfuly' });
     } catch (error) {
       return res.status(409).send(`Conflict:\n${error}`);
     }
